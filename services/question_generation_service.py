@@ -171,10 +171,12 @@ Use this exact schema:
 # 3. Lambda Handler — Entry Point
 # ══════════════════════════════════════════════════════════════════════════════
 def lambda_handler(event, context):
+
     logger.info(f"Event received: {json.dumps(event)}")
+    body = json.loads(event.get("body", "{}"))
 
     # ── Extract & validate input ──────────────────────────────────────────────
-    product_id = event.get("product_id")
+    product_id = body.get("product_id")
     if not product_id:
         return _error_response(400, "Missing required field: 'product_id'")
 
