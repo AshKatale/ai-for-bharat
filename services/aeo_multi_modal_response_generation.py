@@ -24,7 +24,7 @@ GPT_MODEL_ID    = "openai.gpt-oss-safeguard-120b"   # OpenAI GPT via Bedrock
 GEMINI_MODEL    = "gemini-2.5-flash"
 
 # API keys from Lambda environment variables
-GEMINI_API_KEY  = "AIzaSyChcl7pHdi2J83IVXw4M46LL_lquOetVD8"
+GEMINI_API_KEY  = os.getenv("GEMINI_API_KEY", "")
 
 # ─── AWS Clients ──────────────────────────────────────────────────────────────
 bedrock_rt = boto3.client("bedrock-runtime", region_name=AWS_REGION)
