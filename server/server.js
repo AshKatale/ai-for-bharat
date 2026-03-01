@@ -8,6 +8,7 @@ const corsMiddleware = require('./middleware/corsMiddleware');
 const errorHandler = require('./middleware/errorHandler');
 const userRoutes = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
+const { initializeAWSServices, testAWSConnectivity } = require('./services/awsServices');
 
 const app = express();
 
@@ -25,13 +26,26 @@ app.use((req, res, next) => {
 // Routes
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
+app.use('/api/aws', require('./routes/awsRoutes'));
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Server is running',
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    const awsStatus = await testAWSConnectivity();
+    res.status(200).json({
+      success: true,
+      message: 'Server is running',
+      timestamp: new Date().toISOString(),
+      awsServices: awsStatus,
+    });
+  } catch (error) {
+    res.status(200).json({
+      success: true,
+      message: 'Server is running',
+      timestamp: new Date().toISOString(),
+      awsServices: { error: error.message },
+    });
+  }
 });
 
 // 404 handler
@@ -46,8 +60,15 @@ app.use((req, res) => {
 app.use(errorHandler);
 
 // Start server
-const server = app.listen(PORT, () => {
+const server = app.listen(PORT, async () => {
   logger.info(`Server running on http://localhost:${PORT} in ${NODE_ENV} mode`);
+  
+  // Initialize AWS services
+  try {
+    await initializeAWSServices();
+  } catch (error) {
+    logger.warn(`AWS services initialization encountered an issue: ${error.message}`);
+  }
 });
 
 // Handle graceful shutdown

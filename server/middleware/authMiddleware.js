@@ -1,6 +1,7 @@
 // Authentication Middleware
 const { UNAUTHORIZED } = require('../constants/statusCodes');
 const { UNAUTHORIZED: UNAUTHORIZED_MSG } = require('../constants/messages');
+const { verifyToken } = require('../utils/jwtUtils');
 
 const authMiddleware = (req, res, next) => {
   try {
@@ -13,14 +14,13 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
-    // Add your token verification logic here
-    // Example: jwt.verify(token, JWT_SECRET)
-
+    const decoded = verifyToken(token);
+    req.userId = decoded.userId;
     next();
   } catch (error) {
     res.status(UNAUTHORIZED).json({
       success: false,
-      message: UNAUTHORIZED_MSG,
+      message: error.message || UNAUTHORIZED_MSG,
     });
   }
 };
