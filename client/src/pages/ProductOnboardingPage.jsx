@@ -20,6 +20,7 @@ function ProductOnboardingPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     setSubmitted(true);
+    localStorage.setItem('onboarding_data', JSON.stringify(form));
   };
 
   return (

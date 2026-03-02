@@ -53,5 +53,23 @@ export const api = {
       score: 72,
       breakdown: sentimentSplit,
       keywords
-    })
+    }),
+
+  // LIVE SENTIMENT ENDPOINT
+  analyzeSentiment: async (productId = 'default', options = {}) => {
+    // For local dev, assuming server is on 5000
+    // Real app might use dynamic env baseUrl
+    const baseUrl = 'http://localhost:5000';
+
+    try {
+      const response = await axios.post(
+        `${baseUrl}/api/sentiment/analyze/${productId}`,
+        options
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Sentiment fetch failed:', error);
+      throw error;
+    }
+  }
 };
