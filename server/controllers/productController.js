@@ -487,3 +487,117 @@ exports.getProductQuestions = async (req, res, next) => {
     next(error);
   }
 };
+
+// Generate a marketing video via Lambda
+exports.generateVideo = async (req, res, next) => {
+  try {
+    const {
+      productId,
+      campaignGoal,
+      targetAudience = {},
+      tone,
+      adStyle,
+      platform,
+      hookStyle,
+      cta = {},
+      branding = {},
+      audio = {},
+      videoSettings = {},
+    } = req.body;
+
+    // Only productId and videoSettings.duration are strictly required
+    if (!productId) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'productId is required.',
+      });
+    }
+
+    if (!videoSettings.duration) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'videoSettings.duration is required.',
+      });
+    }
+
+    // Build finalPrompt — every field is optional beyond the two required above
+    const promptParts = [
+      'Create a high-converting marketing advertisement video.',
+      `Product ID: ${productId}.`,
+      campaignGoal ? `Campaign Goal: ${campaignGoal}.` : '',
+
+      // Target audience
+      targetAudience.ageGroup ? `Target age group: ${targetAudience.ageGroup}.` : '',
+      targetAudience.audienceType ? `Audience type: ${targetAudience.audienceType}.` : '',
+      targetAudience.location ? `Location: ${targetAudience.location}.` : '',
+      targetAudience.gender ? `Gender focus: ${targetAudience.gender}.` : '',
+      targetAudience.incomeLevel ? `Income level: ${targetAudience.incomeLevel}.` : '',
+      targetAudience.painPoint ? `Key pain point to address: ${targetAudience.painPoint}.` : '',
+      targetAudience.interests && targetAudience.interests.length
+        ? `Audience interests: ${targetAudience.interests.join(', ')}.`
+        : '',
+
+      // Creative direction
+      tone ? `Ad tone: ${tone}.` : '',
+      adStyle ? `Ad style: ${adStyle}.` : '',
+      platform ? `Optimized for platform: ${platform}.` : '',
+      hookStyle
+        ? `Hook style: ${hookStyle} — open with a compelling hook that grabs attention within the first 3 seconds.`
+        : '',
+
+      // CTA
+      cta.type ? `Call to Action: "${cta.type}".` : '',
+      cta.urgency ? `CTA urgency: ${cta.urgency}.` : '',
+      cta.offerText ? `Offer: "${cta.offerText}".` : '',
+      cta.promoCode ? `Promo code: "${cta.promoCode}".` : '',
+
+      // Branding
+      branding.tagline ? `Brand tagline: "${branding.tagline}".` : '',
+      branding.websiteUrl ? `Direct viewers to: ${branding.websiteUrl}.` : '',
+      branding.logoUrl
+        ? `Include brand logo positioned at the ${branding.logoPosition || 'top-right'} of the frame.`
+        : '',
+      branding.brandColors && branding.brandColors.length
+        ? `Brand color palette: ${branding.brandColors.join(', ')}.`
+        : '',
+      branding.watermark === true ? 'Apply a subtle watermark throughout the video.' : '',
+
+      // Audio
+      audio.voiceGender ? `Voice: ${audio.voiceGender}.` : '',
+      audio.accent ? `Accent: ${audio.accent}.` : '',
+      audio.energyLevel ? `Voice energy level: ${audio.energyLevel}.` : '',
+      audio.voiceStyle ? `Voice style: ${audio.voiceStyle}.` : '',
+      audio.speed ? `Speech speed: ${audio.speed}x.` : '',
+      audio.backgroundMusicMood ? `Background music mood: ${audio.backgroundMusicMood}.` : '',
+
+      // Video settings
+      `Video duration: ${videoSettings.duration} seconds.`,
+      videoSettings.aspectRatio ? `Aspect ratio: ${videoSettings.aspectRatio}.` : '',
+      videoSettings.resolution ? `Resolution: ${videoSettings.resolution}.` : '',
+      videoSettings.fps ? `Frame rate: ${videoSettings.fps} fps.` : '',
+      videoSettings.subtitleStyle ? `Subtitle style: ${videoSettings.subtitleStyle}.` : '',
+
+      'Ensure the video feels professional, emotionally engaging, and drives direct conversions.',
+    ];
+
+    const finalPrompt = promptParts.filter(Boolean).join(' ');
+
+    // Call the video generation Lambda via axios
+    const lambdaBody = {
+      input_text: finalPrompt,
+      duration: videoSettings.duration,
+      seed: 42,
+    };
+
+    console.log('\n===== LAMBDA REQUEST BODY =====');
+    console.log(JSON.stringify(lambdaBody, null, 2));
+    console.log('================================\n');
+
+    const result = await lambdaService.generateVideo(lambdaBody);
+
+    // Return Lambda response directly
+    return res.status(OK).json(result.data);
+  } catch (error) {
+    next(error);
+  }
+};

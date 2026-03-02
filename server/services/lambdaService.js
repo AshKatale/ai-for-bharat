@@ -1,5 +1,6 @@
 // Lambda Service
 const AWS = require('../config/aws');
+const axios = require('axios');
 const logger = require('../utils/logger');
 const {
   AWS_REGION,
@@ -240,6 +241,32 @@ class LambdaService {
     } catch (error) {
       logger.error(`Error fetching product questions: ${error.message}`);
       throw new Error(`Failed to fetch product questions: ${error.message}`);
+    }
+  }
+
+  /**
+   * Generate a marketing video via external Lambda Function URL
+   * @param {Object} payload - { input_text, duration, seed }
+   * @returns {Promise<Object>} Lambda response data
+   */
+  async generateVideo(payload) {
+    const VIDEO_LAMBDA_URL =
+      'https://mexugii3ermfzuzxjkbdlzm7si0ctlxa.lambda-url.ap-south-1.on.aws/';
+
+    try {
+      logger.info('Calling video generation Lambda URL');
+
+      const response = await axios.post(VIDEO_LAMBDA_URL, payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      logger.info('Video generation Lambda responded successfully');
+      return { success: true, data: response.data };
+    } catch (error) {
+      const status = error.response?.status;
+      const message = error.response?.data || error.message;
+      logger.error(`Error calling video generation Lambda (${status}): ${JSON.stringify(message)}`);
+      throw new Error(`Video generation Lambda failed: ${JSON.stringify(message)}`);
     }
   }
 
