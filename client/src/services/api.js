@@ -1,57 +1,31 @@
+// services/api.js — Axios instance for backend
 import axios from 'axios';
-import {
-  visibilityTrend,
-  competitorComparison,
-  platformPresence,
-  campaigns,
-  sentimentSplit,
-  keywords
-} from '../data/mockData';
 
-const client = axios.create({
-  baseURL: 'https://mock.ai-discoverability.local'
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+
+const api = axios.create({
+  baseURL: `${BASE_URL}/api`,
+  headers: { 'Content-Type': 'application/json' },
 });
 
-const simulate = (data, delay = 900) =>
-  new Promise((resolve) => {
-    setTimeout(() => resolve(data), delay);
-  });
+// Attach JWT token automatically
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
 
-export const api = {
-  client,
-  getOverview: () =>
-    simulate({
-      visibilityScore: 74,
-      trend: visibilityTrend,
-      competitors: competitorComparison,
-      presence: platformPresence,
-      campaigns
-    }),
-  getPresenceAnalytics: () =>
-    simulate({
-      competitors: competitorComparison,
-      gap: 'Your GPT visibility leads by 6 points, but Perplexity mentions trail by 14 points.',
-      suggestions: [
-        'Publish comparison pages with structured facts for AI crawlers.',
-        'Increase third-party citations and expert mentions.',
-        'Add FAQ schema focused on buyer-intent prompts.'
-      ]
-    }),
-  getStrategy: () =>
-    simulate({
-      summary:
-        'Prioritize authority content, benchmark prompts weekly, and run narrative consistency campaigns across high-trust channels.',
-      channels: ['LinkedIn Thought Leadership', 'YouTube Product Explainers', 'Niche Podcasts', 'SEO + LLM Landing Pages'],
-      optimizations: [
-        'Answer high-intent questions with structured snippets.',
-        'Align product pages to conversational query patterns.',
-        'Publish competitor-differentiation tables for AI ingestion.'
-      ]
-    }, 1200),
-  getSentiment: () =>
-    simulate({
-      score: 72,
-      breakdown: sentimentSplit,
-      keywords
-    })
-};
+// On 401 → clear token and redirect to login
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+    }
+    return Promise.reject(err);
+  }
+);
+
+export default api;

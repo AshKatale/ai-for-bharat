@@ -1,12 +1,12 @@
-import { Link, Outlet } from 'react-router-dom';
+// AuthLayout.jsx — Centered auth pages with glass card
+import { Outlet } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 function AuthLayout() {
   return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md rounded-2xl border border-slate-700/60 bg-slate-950/70 p-6 shadow-xl">
-        <Link to="/" className="mb-6 block text-sm text-cyan-300 hover:text-cyan-200">
-          Back to Home
-        </Link>
+    <div className="min-h-screen flex flex-col">
+      <Navbar showAuth={false} />
+      <div className="flex-1 flex items-center justify-center px-4 pt-20">
         <Outlet />
       </div>
     </div>

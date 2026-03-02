@@ -1,48 +1,106 @@
+// SignupPage.jsx — New account registration
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Button from '../components/Button';
+import api from '../services/api';
 
 function SignupPage() {
+  const nav = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
-  const onSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email.includes('@') || form.password.length < 6) {
-      setError('Fill all fields correctly. Password must be at least 6 characters.');
-      return;
-    }
     setError('');
-    navigate('/dashboard');
+    setLoading(true);
+    try {
+      const { data } = await api.post('/users/signup', form);
+      const token = data.data?.token || data.token;
+      const user = data.data?.user || {};
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      nav('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div>
-      <h2 className="text-2xl font-semibold text-white">Sign Up</h2>
-      <p className="mt-1 text-sm text-slate-400">Create your account to start optimizing discoverability.</p>
-      <form onSubmit={onSubmit} className="mt-6 space-y-4">
-        <input name="name" placeholder="Full Name" className="input" value={form.name} onChange={onChange} />
-        <input name="email" type="email" placeholder="Email" className="input" value={form.email} onChange={onChange} />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          className="input"
-          value={form.password}
-          onChange={onChange}
-        />
-        {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-        <Button className="w-full">Create Account</Button>
-      </form>
-      <p className="mt-4 text-sm text-slate-400">
-        Already have an account?{' '}
-        <Link to="/login" className="text-cyan-300 hover:text-cyan-200">
-          Login
-        </Link>
-      </p>
+    <div className="w-full max-w-md">
+      <div className="glass-card p-8">
+        <div className="text-center mb-8">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
+            <span className="text-white text-xl font-bold">A</span>
+          </div>
+          <h1 className="text-2xl font-bold text-white">Create your account</h1>
+          <p className="text-sm text-slate-400 mt-1">Join India's AI product discovery platform</p>
+        </div>
+
+        {error && (
+          <div className="mb-5 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Full Name</label>
+            <input
+              name="name"
+              type="text"
+              className="input-field"
+              placeholder="Rahul Sharma"
+              value={form.name}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Email</label>
+            <input
+              name="email"
+              type="email"
+              className="input-field"
+              placeholder="you@example.com"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1.5">Password</label>
+            <input
+              name="password"
+              type="password"
+              className="input-field"
+              placeholder="Min. 8 characters"
+              value={form.password}
+              onChange={handleChange}
+              required
+              minLength={8}
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className={`btn-primary w-full py-3 mt-2 ${loading ? 'opacity-60 cursor-not-allowed' : ''}`}
+          >
+            {loading ? 'Creating account…' : 'Create Account →'}
+          </button>
+        </form>
+
+        <p className="text-center text-sm text-slate-500 mt-6">
+          Already have an account?{' '}
+          <Link to="/login" className="text-brand-light hover:text-white transition-colors font-medium">
+            Sign in
+          </Link>
+        </p>
+      </div>
     </div>
   );
 }

@@ -1,7 +1,8 @@
+// Card.jsx — Thin wrapper around glass-card utility
 function Card({ title, children, className = '' }) {
   return (
-    <div className={`glass rounded-2xl p-5 shadow-xl shadow-black/20 ${className}`}>
-      {title ? <h3 className="mb-4 text-base font-semibold text-slate-100">{title}</h3> : null}
+    <div className={`glass-card p-5 ${className}`}>
+      {title && <h3 className="mb-4 text-sm font-semibold text-white">{title}</h3>}
       {children}
     </div>
   );

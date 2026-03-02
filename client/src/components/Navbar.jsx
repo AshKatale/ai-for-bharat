@@ -1,8 +1,28 @@
-function Navbar() {
+// Navbar.jsx — Sticky top bar (used in auth layout and as mobile bar)
+import { Link } from 'react-router-dom';
+
+function Navbar({ showAuth = true }) {
   return (
-    <header className="sticky top-0 z-20 flex items-center justify-between border-b border-slate-700/40 bg-slate-950/70 px-4 py-4 backdrop-blur lg:px-8">
-      <h1 className="text-sm font-semibold tracking-wide text-slate-100">AI Discoverability Optimization Platform</h1>
-      <div className="rounded-full bg-dark-muted px-3 py-1 text-xs text-slate-300">Pro Plan</div>
+    <header className="fixed top-0 left-0 right-0 z-40 glass border-b border-white/6 h-16">
+      <div className="h-full max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2.5 group">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/25 group-hover:shadow-green-500/40 transition-shadow">
+            <span className="text-white text-sm font-bold">A</span>
+          </div>
+          <span className="text-sm font-bold text-white">AI for Bharat</span>
+        </Link>
+
+        {showAuth && (
+          <div className="flex items-center gap-2">
+            <Link to="/login">
+              <button className="btn-ghost text-sm">Login</button>
+            </Link>
+            <Link to="/signup">
+              <button className="btn-primary text-sm">Get Started</button>
+            </Link>
+          </div>
+        )}
+      </div>
     </header>
   );
 }

@@ -1,6 +1,7 @@
 // Product Routes
 const express = require('express');
 const productController = require('../controllers/productController');
+const { searchStream } = require('../controllers/searchController');
 const authMiddleware = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -9,9 +10,16 @@ const router = express.Router();
 router.get('/', productController.getAllProducts);
 router.get('/trending', productController.getTrendingProducts);
 router.get('/search', productController.searchProducts);
-router.post('/questions', productController.getProductQuestions);
+
+// Real SSE streaming search — must be before /:id
+router.get('/search/stream', searchStream);
+
+router.get('/category/:category', productController.getProductsByCategory);
+router.get('/status/:status', productController.getProductsByStatus);
 router.get('/user/:userId', productController.getProductsByUser);
 router.get('/:id', productController.getProductById);
+router.get('/:id/with-owner', productController.getProductWithOwner);
+
 
 // Protected routes - Create product
 router.post('/', authMiddleware, productController.createProduct);

@@ -1,13 +1,12 @@
-function Button({ children, variant = 'primary', className = '', ...props }) {
-  const styles =
-    variant === 'outline'
-      ? 'border border-slate-500 bg-transparent hover:border-accent-cyan hover:text-accent-cyan'
-      : 'bg-gradient-to-r from-cyan-500 to-emerald-500 text-white shadow-glow hover:brightness-110';
-
+// Button.jsx — Reusable button component
+function Button({ children, variant = 'primary', className = '', disabled = false, type = 'button', onClick }) {
+  const base = variant === 'primary' ? 'btn-primary' : variant === 'outline' ? 'btn-outline' : 'btn-ghost';
   return (
     <button
-      className={`rounded-xl px-5 py-2.5 text-sm font-medium transition-all duration-300 ${styles} ${className}`}
-      {...props}
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${base} ${className} ${disabled ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
     >
       {children}
     </button>

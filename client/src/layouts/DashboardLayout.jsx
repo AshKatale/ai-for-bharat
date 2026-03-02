@@ -1,17 +1,16 @@
+// DashboardLayout.jsx — Sidebar + main content area
 import { Outlet } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import Sidebar from '../components/Sidebar';
 
 function DashboardLayout() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <div className="flex min-h-screen flex-1 flex-col">
-        <Navbar />
-        <main className="p-4 pb-24 lg:p-8">
+      <main className="flex-1 ml-60 min-h-screen overflow-y-auto">
+        <div className="max-w-5xl mx-auto px-6 py-8">
           <Outlet />
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }

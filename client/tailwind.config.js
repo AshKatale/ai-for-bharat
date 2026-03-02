@@ -1,28 +1,62 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,jsx}'],
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        dark: {
-          bg: '#070b14',
-          panel: '#111827',
-          muted: '#1f2937',
-          border: '#334155'
+        brand: {
+          DEFAULT: '#22c55e',
+          light: '#4ade80',
+          dark: '#16a34a',
         },
         accent: {
-          blue: '#38bdf8',
-          cyan: '#22d3ee',
-          emerald: '#34d399'
-        }
+          DEFAULT: '#10b981',
+          dark: '#059669',
+        },
+        dark: {
+          base: '#020617',
+          card: '#0a0f25',
+          border: 'rgba(255,255,255,0.08)',
+          muted: '#0f172a',
+        },
+        step: {
+          pending: '#475569',
+          active: '#4ade80',
+          done: '#10b981',
+        },
       },
-      boxShadow: {
-        glow: '0 0 0 1px rgba(56,189,248,0.25), 0 10px 30px rgba(2,132,199,0.25)'
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
       },
-      backgroundImage: {
-        grid: 'radial-gradient(circle at 1px 1px, rgba(148,163,184,0.15) 1px, transparent 0)'
-      }
-    }
+      borderColor: {
+        DEFAULT: 'rgba(255,255,255,0.08)',
+      },
+      keyframes: {
+        fadeSlideIn: {
+          from: { opacity: '0', transform: 'translateY(10px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        pulseDot: {
+          '0%,100%': { opacity: '1', transform: 'scale(1)' },
+          '50%': { opacity: '0.5', transform: 'scale(0.75)' },
+        },
+        shimmer: {
+          '0%': { backgroundPosition: '-200% center' },
+          '100%': { backgroundPosition: '200% center' },
+        },
+        float: {
+          '0%,100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+      },
+      animation: {
+        'fade-slide': 'fadeSlideIn 0.4s ease forwards',
+        'pulse-dot': 'pulseDot 1.2s ease-in-out infinite',
+        shimmer: 'shimmer 1.5s linear infinite',
+        float: 'float 3s ease-in-out infinite',
+      },
+      backdropBlur: { xl: '14px' },
+    },
   },
-  plugins: []
+  plugins: [],
 };

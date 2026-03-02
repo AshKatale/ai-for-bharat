@@ -1,8 +1,10 @@
-function Loader({ label = 'Loading...' }) {
+// Loader.jsx — Centered spinner / skeleton loader
+function Loader({ size = 'md', text = '' }) {
+  const sz = size === 'sm' ? 'w-5 h-5' : size === 'lg' ? 'w-10 h-10' : 'w-7 h-7';
   return (
-    <div className="flex items-center gap-3 py-8 text-slate-300">
-      <div className="h-5 w-5 animate-spin rounded-full border-2 border-accent-cyan border-t-transparent" />
-      <span>{label}</span>
+    <div className="flex flex-col items-center justify-center gap-3 py-10">
+      <div className={`${sz} rounded-full border-2 border-brand/20 border-t-brand animate-spin`} />
+      {text && <p className="text-sm text-slate-500 animate-pulse">{text}</p>}
     </div>
   );
 }
