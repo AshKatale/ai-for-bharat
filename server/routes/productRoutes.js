@@ -9,6 +9,7 @@ const router = express.Router();
 router.get('/', productController.getAllProducts);
 router.get('/trending', productController.getTrendingProducts);
 router.get('/search', productController.searchProducts);
+router.post('/questions', productController.getProductQuestions);
 router.get('/category/:category', productController.getProductsByCategory);
 router.get('/status/:status', productController.getProductsByStatus);
 router.get('/user/:userId', productController.getProductsByUser);

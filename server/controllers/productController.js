@@ -4,6 +4,7 @@ const { SUCCESS, CREATED_SUCCESSFULLY, NOT_FOUND: NOT_FOUND_MSG } = require('../
 const Product = require('../models/Product');
 const User = require('../models/User');
 const logger = require('../utils/logger');
+const lambdaService = require('../services/lambdaService');
 
 // Get all products
 exports.getAllProducts = async (req, res, next) => {
@@ -457,6 +458,30 @@ exports.getProductWithOwner = async (req, res, next) => {
         ...product,
         owner: owner || null,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get AI-generated questions for a product (via external Lambda Function URL)
+exports.getProductQuestions = async (req, res, next) => {
+  try {
+    const { product_id } = req.body;
+
+    if (!product_id) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'product_id is required',
+      });
+    }
+
+    const result = await lambdaService.getProductQuestions(product_id);
+
+    res.status(OK).json({
+      success: true,
+      message: SUCCESS,
+      data: result.data,
     });
   } catch (error) {
     next(error);

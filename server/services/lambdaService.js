@@ -211,6 +211,39 @@ class LambdaService {
   }
 
   /**
+   * Get AI-generated questions for a product via external Lambda Function URL
+   * @param {string} productId - The product ID
+   * @returns {Promise<Object>} Questions data from the Lambda service
+   */
+  async getProductQuestions(productId) {
+    const LAMBDA_URL =
+      'https://fj77afmr4pggcw6ggqr42cbida0zyhmd.lambda-url.ap-south-1.on.aws/';
+
+    try {
+      logger.info(`Fetching product questions for product: ${productId}`);
+
+      const response = await fetch(LAMBDA_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product_id: productId }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger.error(`Lambda URL returned ${response.status}: ${errorText}`);
+        throw new Error(`Lambda service returned ${response.status}: ${errorText}`);
+      }
+
+      const data = await response.json();
+      logger.info(`Product questions fetched successfully for: ${productId}`);
+      return { success: true, data };
+    } catch (error) {
+      logger.error(`Error fetching product questions: ${error.message}`);
+      throw new Error(`Failed to fetch product questions: ${error.message}`);
+    }
+  }
+
+  /**
    * Delete Lambda function
    * @param {string} functionName - Lambda function name
    * @returns {Promise<Object>} Deletion result
