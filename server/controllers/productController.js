@@ -506,12 +506,12 @@ exports.generateVideo = async (req, res, next) => {
     } = req.body;
 
     // Only productId and videoSettings.duration are strictly required
-    if (!productId) {
-      return res.status(BAD_REQUEST).json({
-        success: false,
-        message: 'productId is required.',
-      });
-    }
+    // if (!productId) {
+    //   return res.status(BAD_REQUEST).json({
+    //     success: false,
+    //     message: 'productId is required.',
+    //   });
+    // }
 
     if (!videoSettings.duration) {
       return res.status(BAD_REQUEST).json({
