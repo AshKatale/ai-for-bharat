@@ -31,4 +31,7 @@ router.delete('/:id', authMiddleware, productController.deleteProduct);
 // Video generation
 router.post('/generate-video', productController.generateVideo);
 
+// Image ad generation
+router.post('/generate-image-ad', productController.generateImageAd);
+
 module.exports = router;

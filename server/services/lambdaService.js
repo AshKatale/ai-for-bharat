@@ -271,6 +271,32 @@ class LambdaService {
   }
 
   /**
+   * Generate a marketing image advertisement via external Lambda Function URL
+   * @param {Object} payload - { input_text, negative_text, style, width, height, quality, cfgScale, seed, numberOfImages }
+   * @returns {Promise<Object>} Lambda response data
+   */
+  async generateImageAd(payload) {
+    const IMAGE_AD_LAMBDA_URL =
+      'https://3wcluhloqq4s55tghlwqzq4cae0nanff.lambda-url.ap-south-1.on.aws/';
+
+    try {
+      logger.info('Calling image ad generation Lambda URL');
+
+      const response = await axios.post(IMAGE_AD_LAMBDA_URL, payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      logger.info('Image ad generation Lambda responded successfully');
+      return { success: true, data: response.data };
+    } catch (error) {
+      const status = error.response?.status;
+      const message = error.response?.data || error.message;
+      logger.error(`Error calling image ad generation Lambda (${status}): ${JSON.stringify(message)}`);
+      throw new Error(`Image ad generation Lambda failed: ${JSON.stringify(message)}`);
+    }
+  }
+
+  /**
    * Delete Lambda function
    * @param {string} functionName - Lambda function name
    * @returns {Promise<Object>} Deletion result

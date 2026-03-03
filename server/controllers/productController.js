@@ -488,6 +488,128 @@ exports.getProductQuestions = async (req, res, next) => {
   }
 };
 
+// Generate a marketing image advertisement via Lambda
+exports.generateImageAd = async (req, res, next) => {
+  try {
+    const {
+      campaignGoal,
+      targetAudience,
+      tone,
+      stylePreference,
+      sceneType,
+      lighting,
+      composition,
+      brandColors,
+      tagline,
+      offerText,
+      ctaText,
+      negative_text,
+      style,
+      width,
+      height,
+      quality,
+      cfgScale,
+      seed,
+      numberOfImages,
+    } = req.body;
+
+    // Validate required fields
+    const requiredFields = {
+      campaignGoal,
+      tone,
+      sceneType,
+      lighting,
+      composition,
+      style,
+      width,
+      height,
+      quality,
+      cfgScale,
+    };
+
+    const missingFields = Object.entries(requiredFields)
+      .filter(([, value]) => value === undefined || value === null || value === '')
+      .map(([key]) => key);
+
+    if (missingFields.length > 0) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+      });
+    }
+
+    // Build finalPrompt — a single, rich, descriptive paragraph
+    const promptParts = [
+      'Create a high-converting marketing advertisement image.',
+
+      campaignGoal
+        ? `The campaign goal is to ${campaignGoal}.`
+        : '',
+      targetAudience
+        ? `The target audience is ${targetAudience}.`
+        : '',
+      tone
+        ? `The overall tone of the ad should be ${tone}.`
+        : '',
+      sceneType
+        ? `The scene should depict ${sceneType}.`
+        : '',
+      lighting
+        ? `Lighting: ${lighting}.`
+        : '',
+      composition
+        ? `Composition: ${composition}.`
+        : '',
+      stylePreference
+        ? `Visual style preference: ${stylePreference}.`
+        : '',
+      brandColors && brandColors.length
+        ? `Incorporate the brand color palette: ${brandColors.join(', ')}.`
+        : '',
+      tagline
+        ? `Feature the tagline: "${tagline}".`
+        : '',
+      offerText
+        ? `Highlight the offer: "${offerText}".`
+        : '',
+      ctaText
+        ? `Include a clear call-to-action: "${ctaText}".`
+        : '',
+      'The image must be visually rich, emotionally compelling, and optimized for commercial advertising.',
+    ];
+
+    const finalPrompt = promptParts.filter(Boolean).join(' ');
+
+    const negativeText =
+      negative_text ||
+      'low quality, blurry, distorted, extra limbs, bad lighting, watermark, noisy background';
+
+    // Build Lambda request body
+    const lambdaBody = {
+      input_text: finalPrompt,
+      negative_text: negativeText,
+      style,
+      width,
+      height,
+      quality,
+      cfgScale,
+      seed: seed || 0,
+      numberOfImages: numberOfImages || 1,
+    };
+
+    console.log('\n===== IMAGE AD LAMBDA REQUEST BODY =====');
+    console.log(JSON.stringify(lambdaBody, null, 2));
+    console.log('=========================================\n');
+
+    const result = await lambdaService.generateImageAd(lambdaBody);
+
+    // Return Lambda response directly
+    return res.status(OK).json(result.data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Generate a marketing video via Lambda
 exports.generateVideo = async (req, res, next) => {
   try {
