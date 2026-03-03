@@ -10,6 +10,7 @@ import ProductsPage from '../pages/ProductsPage';
 import ProductOnboardingPage from '../pages/ProductOnboardingPage';
 import SettingsPage from '../pages/SettingsPage';
 import VideoAdGeneratorPage from '../pages/VideoAdGeneratorPage';
+import ImageAdGeneratorPage from '../pages/ImageAdGeneratorPage';
 
 function AppRoutes() {
   return (
@@ -29,6 +30,7 @@ function AppRoutes() {
         <Route path="search" element={<SearchSimulationPage />} />
         <Route path="products" element={<ProductsPage />} />
         <Route path="add-product" element={<ProductOnboardingPage />} />
+        <Route path="image-generator" element={<ImageAdGeneratorPage />} />
         <Route path="video-generator" element={<VideoAdGeneratorPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
