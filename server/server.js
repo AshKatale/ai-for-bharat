@@ -6,9 +6,11 @@ const logger = require('./utils/logger');
 const { PORT, NODE_ENV } = require('./config/env');
 const corsMiddleware = require('./middleware/corsMiddleware');
 const errorHandler = require('./middleware/errorHandler');
-const userRoutes = require('./routes/userRoutes');
+const userRoutes    = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
+const geoRoutes     = require('./routes/geoRoutes');
 const { initializeAWSServices, testAWSConnectivity } = require('./services/awsServices');
+
 
 const app = express();
 
@@ -24,10 +26,12 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.use('/api/users', userRoutes);
+app.use('/api/users',    userRoutes);
 app.use('/api/products', productRoutes);
-app.use('/api/aws', require('./routes/awsRoutes'));
-app.use('/api/sentiment', require('./routes/sentimentRoutes'));
+app.use('/api/geo',      geoRoutes);
+app.use('/api/aws',      require('./routes/awsRoutes'));
+app.use('/api/sentiment',require('./routes/sentimentRoutes'));
+
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
