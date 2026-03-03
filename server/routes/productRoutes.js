@@ -8,7 +8,6 @@ const router = express.Router();
 
 // Public routes - Products listing and info
 router.get('/', productController.getAllProducts);
-router.get('/trending', productController.getTrendingProducts);
 router.get('/search', productController.searchProducts);
 
 // Real SSE streaming search — must be before /:id
@@ -33,5 +32,8 @@ router.post('/generate-video', productController.generateVideo);
 
 // Image ad generation
 router.post('/generate-image-ad', productController.generateImageAd);
+
+// Post generation (with optional image/video)
+router.post('/generate-post', productController.generatePost);
 
 module.exports = router;

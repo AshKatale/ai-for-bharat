@@ -271,6 +271,32 @@ class LambdaService {
   }
 
   /**
+   * Generate a platform-specific marketing post via external Lambda Function URL
+   * @param {Object} payload - { product_name, product_category, brand_name, post_language, tone, input_text, platform }
+   * @returns {Promise<Object>} Lambda response data
+   */
+  async generatePost(payload) {
+    const POST_LAMBDA_URL =
+      'https://l6umieamxjr3w2wscxla7ognqy0arhqn.lambda-url.ap-south-1.on.aws/';
+
+    try {
+      logger.info('Calling post generation Lambda URL');
+
+      const response = await axios.post(POST_LAMBDA_URL, payload, {
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      logger.info('Post generation Lambda responded successfully');
+      return { success: true, data: response.data };
+    } catch (error) {
+      const status = error.response?.status;
+      const message = error.response?.data || error.message;
+      logger.error(`Error calling post generation Lambda (${status}): ${JSON.stringify(message)}`);
+      throw new Error(`Post generation Lambda failed: ${JSON.stringify(message)}`);
+    }
+  }
+
+  /**
    * Generate a marketing image advertisement via external Lambda Function URL
    * @param {Object} payload - { input_text, negative_text, style, width, height, quality, cfgScale, seed, numberOfImages }
    * @returns {Promise<Object>} Lambda response data

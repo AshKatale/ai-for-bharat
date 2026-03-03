@@ -266,175 +266,6 @@ exports.publishProduct = async (req, res, next) => {
   }
 };
 
-// Archive product
-exports.archiveProduct = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const product = await Product.archive(id);
-
-    res.status(OK).json({
-      success: true,
-      message: 'Product archived successfully',
-      data: product,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Update product statistics
-exports.updateProductStats = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { downloads, stars, views, users, rating, reviews } = req.body;
-
-    const statData = {};
-    if (downloads !== undefined) statData.downloads = downloads;
-    if (stars !== undefined) statData.stars = stars;
-    if (views !== undefined) statData.views = views;
-    if (users !== undefined) statData.users = users;
-    if (rating !== undefined) statData.rating = rating;
-    if (reviews !== undefined) statData.reviews = reviews;
-
-    const product = await Product.updateStats(id, statData);
-
-    res.status(OK).json({
-      success: true,
-      message: 'Product statistics updated successfully',
-      data: product,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Increment download count
-exports.incrementDownloads = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(NOT_FOUND).json({
-        success: false,
-        message: NOT_FOUND_MSG,
-      });
-    }
-
-    const newDownloadCount = (product.stats?.downloads || 0) + 1;
-    const updated = await Product.updateStats(id, { downloads: newDownloadCount });
-
-    res.status(OK).json({
-      success: true,
-      message: 'Download count updated',
-      data: updated,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Increment views
-exports.incrementViews = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const product = await Product.findById(id);
-    if (!product) {
-      return res.status(NOT_FOUND).json({
-        success: false,
-        message: NOT_FOUND_MSG,
-      });
-    }
-
-    const newViewCount = (product.stats?.views || 0) + 1;
-    const updated = await Product.updateStats(id, { views: newViewCount });
-
-    res.status(OK).json({
-      success: true,
-      message: 'View count updated',
-      data: updated,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Add team member
-exports.addTeamMember = async (req, res, next) => {
-  try {
-    const { productId, userId } = req.body;
-
-    if (!productId || !userId) {
-      return res.status(BAD_REQUEST).json({
-        success: false,
-        message: 'ProductId and userId are required',
-      });
-    }
-
-    // Verify user exists
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(NOT_FOUND).json({
-        success: false,
-        message: 'User not found',
-      });
-    }
-
-    const product = await Product.addTeamMember(productId, userId);
-
-    res.status(OK).json({
-      success: true,
-      message: 'Team member added successfully',
-      data: product,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Remove team member
-exports.removeTeamMember = async (req, res, next) => {
-  try {
-    const { productId, userId } = req.body;
-
-    if (!productId || !userId) {
-      return res.status(BAD_REQUEST).json({
-        success: false,
-        message: 'ProductId and userId are required',
-      });
-    }
-
-    const product = await Product.removeTeamMember(productId, userId);
-
-    res.status(OK).json({
-      success: true,
-      message: 'Team member removed successfully',
-      data: product,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get trending products
-exports.getTrendingProducts = async (req, res, next) => {
-  try {
-    const limit = req.query.limit || 10;
-    const products = await Product.getTrending(parseInt(limit));
-
-    res.status(OK).json({
-      success: true,
-      message: SUCCESS,
-      data: products,
-      count: products.length,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 // Get product with owner details
 exports.getProductWithOwner = async (req, res, next) => {
   try {
@@ -482,6 +313,248 @@ exports.getProductQuestions = async (req, res, next) => {
       success: true,
       message: SUCCESS,
       data: result.data,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Generate a platform-specific marketing post (with optional image/video)
+exports.generatePost = async (req, res, next) => {
+  try {
+    const {
+      productId,
+      brand_name,
+      post_language = 'english',
+      tone,
+      input_text,
+      platform,
+      generateImage = false,
+      generateVideo = false,
+      imageDetails = {},
+      videoDetails = {},
+    } = req.body;
+
+    // productId is always required
+    if (!productId) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'productId is required.',
+      });
+    }
+
+    // ----------------------------------------------------------------
+    // 1. Validation
+    // ----------------------------------------------------------------
+    if (generateImage && generateVideo) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'generateImage and generateVideo cannot both be true at the same time.',
+      });
+    }
+
+    if (generateImage && (!imageDetails || Object.keys(imageDetails).length === 0)) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'imageDetails is required when generateImage is true.',
+      });
+    }
+
+    if (generateVideo && (!videoDetails || Object.keys(videoDetails).length === 0)) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'videoDetails is required when generateVideo is true.',
+      });
+    }
+
+    // ----------------------------------------------------------------
+    // 2. Fetch product from DB using productId
+    // ----------------------------------------------------------------
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(NOT_FOUND).json({
+        success: false,
+        message: `Product not found: ${productId}`,
+      });
+    }
+
+    const product_name = product.name;
+    const product_category = product.category;
+
+    // ----------------------------------------------------------------
+    // 3. Validate remaining required fields
+    // ----------------------------------------------------------------
+    const requiredFields = { brand_name, tone, platform };
+    const missingFields = Object.entries(requiredFields)
+      .filter(([, v]) => v === undefined || v === null || v === '')
+      .map(([k]) => k);
+
+    if (missingFields.length > 0) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+      });
+    }
+
+    // Normalise to lowercase for enum checks
+    const normLanguage = post_language.toLowerCase();
+    const normTone     = tone.toLowerCase();
+    const normPlatform = platform.toLowerCase();
+
+    const ALLOWED_LANGUAGES = ['english', 'hindi-in-english', 'hinglish'];
+    const ALLOWED_TONES     = ['energetic', 'professional', 'casual', 'witty'];
+    const ALLOWED_PLATFORMS = ['instagram', 'linkedin', 'twitter', 'facebook', 'youtube'];
+
+    if (!ALLOWED_LANGUAGES.includes(normLanguage)) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: `Invalid post_language. Allowed values: ${ALLOWED_LANGUAGES.join(', ')}`,
+      });
+    }
+
+    if (!ALLOWED_TONES.includes(normTone)) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: `Invalid tone. Allowed values: ${ALLOWED_TONES.join(', ')}`,
+      });
+    }
+
+    if (!ALLOWED_PLATFORMS.includes(normPlatform)) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: `Invalid platform. Allowed values: ${ALLOWED_PLATFORMS.join(', ')}`,
+      });
+    }
+
+    // ----------------------------------------------------------------
+    // 4. Build platform-optimised postPrompt
+    // ----------------------------------------------------------------
+    const platformCTAs = {
+      instagram: 'Tap the link in bio to explore now!',
+      linkedin:  'Connect with us or visit our website to learn more.',
+      twitter:   'Check it out and retweet to spread the word!',
+      facebook:  'Share this with someone who needs it and click the link to get started.',
+      youtube:   'Subscribe and hit the bell icon so you never miss an update.',
+    };
+
+    const platformStyles = {
+      instagram: 'visual-first, emoji-heavy, storytelling caption (150-300 words, 5-8 hashtags)',
+      linkedin:  'professional but human, insight-led, bold hook (200-300 words, 3-5 hashtags, end with a question)',
+      twitter:   'punchy, witty, conversational thread (main post under 280 chars, 2-3 hashtags)',
+      facebook:  'community-focused, conversational, warm (150-250 words, 3-5 hashtags)',
+      youtube:   'engaging, informative, drives watch intent (200-350 words, 4-6 hashtags)',
+    };
+
+    const postPromptParts = [
+      `Write a ${platformStyles[normPlatform]} marketing post for ${normPlatform}.`,
+      `Product: ${product_name}.`,
+      `Category: ${product_category}.`,
+      `Brand: ${brand_name}.`,
+      `Language: ${normLanguage}.`,
+      `Tone: ${normTone}.`,
+      input_text ? `Additional context: ${input_text}.` : '',
+      `End with a clear call-to-action: ${platformCTAs[normPlatform]}`,
+    ];
+
+    const postPrompt = postPromptParts.filter(Boolean).join(' ');
+
+    // ----------------------------------------------------------------
+    // 5. Call post generation Lambda
+    // ----------------------------------------------------------------
+    const postLambdaBody = {
+      product_name,
+      product_category,
+      brand_name,
+      post_language: normLanguage,
+      tone:          normTone,
+      input_text:    postPrompt,
+      platform:      normPlatform,
+    };
+
+    logger.info(`\n===== POST GENERATION LAMBDA BODY =====\n${JSON.stringify(postLambdaBody, null, 2)}\n=======================================`);
+
+    const postResult = await lambdaService.generatePost(postLambdaBody);
+    const postResponse = postResult.data;
+
+    // ----------------------------------------------------------------
+    // 6. Optionally generate image
+    // ----------------------------------------------------------------
+    let imageResponse = null;
+    if (generateImage) {
+      const finalImagePromptParts = [
+        'Create a high-converting marketing advertisement image.',
+        `Product: ${product_name}.`,
+        `Category: ${product_category}.`,
+        `Brand: ${brand_name}.`,
+        `Tone: ${tone}.`,
+        `Optimised for ${platform}.`,
+        imageDetails.sceneType ? `Scene: ${imageDetails.sceneType}.` : '',
+        imageDetails.lighting ? `Lighting: ${imageDetails.lighting}.` : '',
+        imageDetails.composition ? `Composition: ${imageDetails.composition}.` : '',
+        'The image must be visually rich, emotionally compelling, and optimised for commercial advertising.',
+      ];
+
+      const finalImagePrompt = finalImagePromptParts.filter(Boolean).join(' ');
+
+      const imageLambdaBody = {
+        input_text: finalImagePrompt,
+        negative_text: 'low quality, blurry, distorted, watermark, bad lighting',
+        style: imageDetails.style,
+        width: imageDetails.width,
+        height: imageDetails.height,
+        quality: imageDetails.quality,
+        cfgScale: imageDetails.cfgScale,
+        seed: imageDetails.seed || 0,
+        numberOfImages: imageDetails.numberOfImages || 1,
+      };
+
+      logger.info(`\n===== IMAGE LAMBDA BODY =====\n${JSON.stringify(imageLambdaBody, null, 2)}\n=============================`);
+
+      const imageResult = await lambdaService.generateImageAd(imageLambdaBody);
+      imageResponse = imageResult.data;
+    }
+
+    // ----------------------------------------------------------------
+    // 7. Optionally generate video
+    // ----------------------------------------------------------------
+    let videoResponse = null;
+    if (generateVideo) {
+      const finalVideoPromptParts = [
+        'Create a high-converting marketing advertisement video.',
+        `Product: ${product_name}.`,
+        `Category: ${product_category}.`,
+        `Brand: ${brand_name}.`,
+        `Tone: ${tone}.`,
+        `Optimised for ${platform}.`,
+        videoDetails.duration ? `Duration: ${videoDetails.duration} seconds.` : '',
+        videoDetails.voiceStyle ? `Voice style: ${videoDetails.voiceStyle}.` : '',
+        videoDetails.backgroundMusicMood ? `Background music mood: ${videoDetails.backgroundMusicMood}.` : '',
+        videoDetails.aspectRatio ? `Aspect ratio: ${videoDetails.aspectRatio}.` : '',
+        videoDetails.resolution ? `Resolution: ${videoDetails.resolution}.` : '',
+        'Ensure the video feels professional, emotionally engaging, and drives conversions.',
+      ];
+
+      const finalVideoPrompt = finalVideoPromptParts.filter(Boolean).join(' ');
+
+      const videoLambdaBody = {
+        input_text: finalVideoPrompt,
+        duration: videoDetails.duration,
+        seed: 0,
+      };
+
+      logger.info(`\n===== VIDEO LAMBDA BODY =====\n${JSON.stringify(videoLambdaBody, null, 2)}\n=============================`);
+
+      const videoResult = await lambdaService.generateVideo(videoLambdaBody);
+      videoResponse = videoResult.data;
+    }
+
+    // ----------------------------------------------------------------
+    // 8. Return unified response
+    // ----------------------------------------------------------------
+    return res.status(OK).json({
+      post: postResponse,
+      image: imageResponse,
+      video: videoResponse,
     });
   } catch (error) {
     next(error);
