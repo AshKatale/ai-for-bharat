@@ -9,6 +9,8 @@ const errorHandler = require('./middleware/errorHandler');
 const userRoutes    = require('./routes/userRoutes');
 const productRoutes = require('./routes/productRoutes');
 const geoRoutes     = require('./routes/geoRoutes');
+const questionRoutes = require('./routes/questionRoutes');
+const evaluationRoutes = require('./routes/evaluationRoutes');
 const { initializeAWSServices, testAWSConnectivity } = require('./services/awsServices');
 
 
@@ -29,6 +31,8 @@ app.use((req, res, next) => {
 app.use('/api/users',    userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/geo',      geoRoutes);
+app.use('/api/questions',questionRoutes);
+app.use('/api/evaluate', evaluationRoutes);
 app.use('/api/aws',      require('./routes/awsRoutes'));
 app.use('/api/sentiment',require('./routes/sentimentRoutes'));
 

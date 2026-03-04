@@ -26,4 +26,10 @@ module.exports = {
   DYNAMODB_USERS_TABLE_NAME: process.env.DYNAMODB_USERS_TABLE_NAME || 'Users',
   DYNAMODB_PRODUCTS_TABLE_NAME: process.env.DYNAMODB_PRODUCTS_TABLE_NAME || 'Products',
   DYNAMODB_ENDPOINT: process.env.DYNAMODB_ENDPOINT || 'https://dynamodb.ap-south-1.amazonaws.com',
+
+  // AstraDB Configuration
+  ASTRA_DB_TOKEN: process.env.ASTRA_DB_TOKEN,
+  ASTRA_DB_ENDPOINT: process.env.ASTRA_DB_ENDPOINT,
+  ASTRA_DB_KEYSPACE: process.env.ASTRA_DB_KEYSPACE,
+  EMBEDDING_MODEL: process.env.EMBEDDING_MODEL,
 };
