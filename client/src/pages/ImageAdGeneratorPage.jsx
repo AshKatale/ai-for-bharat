@@ -1,474 +1,360 @@
-// ImageAdGeneratorPage.jsx — AI Marketing Image Generator
-import { useState, useCallback } from 'react';
+import { useMemo, useState } from 'react';
+import { Image as ImageIcon, Loader2, Sparkles, Wand2, SlidersHorizontal, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-    Image, Target, Mic, MousePointerClick, Palette,
-    Settings2, ChevronDown, ChevronRight, Loader2,
-    CheckCircle2, AlertCircle, Zap, Sparkles,
-    BarChart2, Sun, Layout, Layers, Box, Maximize, Monitor, FileText
-} from 'lucide-react';
 import api from '../services/api';
-
-// ─── Constants ────────────────────────────────────────────────
-const CAMPAIGN_GOALS = ['Brand Awareness', 'Product Launch', 'Lead Generation', 'Sales Conversion', 'Event Promotion'];
-const TONES = ['Bold', 'Confident', 'Energetic', 'Professional', 'Minimalist', 'Luxurious'];
-const STYLES = ['PHOTOREALISM', 'DIGITAL_ART', 'ANIME', 'CINEMATIC', '3D_RENDER', 'PIXEL_ART'];
-const QUALITIES = ['standard', 'premium', 'extreme'];
-const LIGHTING_OPTIONS = ['Golden Hour', 'Studio Lighting', 'Neon', 'Natural Light', 'Dynamic Shadows', 'Soft Glow'];
-const COMPOSITIONS = ['Rule of Thirds', 'Centered', 'Close-up Product', 'Lifestyle Shot', 'Wide Angle', 'Bird\'s Eye'];
-
-const SECTIONS = [
-    { id: 'campaign', label: 'Campaign Setup', icon: BarChart2 },
-    { id: 'style', label: 'Visual Style', icon: Image },
-    { id: 'content', label: 'Content & Brand', icon: Palette },
-    { id: 'settings', label: 'Image Settings', icon: Settings2 },
-];
 
 const IMAGE_AD_API = '/products/generate-image-ad';
 
+const STYLES = ['PHOTOREALISM', 'DIGITAL_ART', 'ANIME'];
+const TONES = ['Bold', 'Confident', 'Energetic', 'Professional', 'Minimalist'];
+const LIGHTING_OPTIONS = ['Golden Hour', 'Studio Lighting', 'Neon', 'Natural Light'];
+const COMPOSITIONS = ['Rule of Thirds', 'Centered', 'Close-up Product', 'Lifestyle Shot'];
+const QUALITIES = ['standard', 'premium', 'extreme'];
+
+const STYLE_FALLBACKS = {
+  PHOTOREALISM: 'PHOTOREALISM',
+  DIGITAL_ART: 'DIGITAL_ART',
+  ANIME: 'ANIME',
+  CINEMATIC: 'PHOTOREALISM',
+  '3D_RENDER': 'DIGITAL_ART',
+  PIXEL_ART: 'ANIME',
+};
+
+const DEFAULT_PREVIEW_IMAGE = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#0f172a"/>
+        <stop offset="100%" stop-color="#111827"/>
+      </linearGradient>
+    </defs>
+    <rect width="1024" height="1024" fill="url(#g)"/>
+    <text x="512" y="485" text-anchor="middle" fill="#e2e8f0" font-family="Arial" font-size="52" font-weight="700">Image Preview</text>
+    <text x="512" y="545" text-anchor="middle" fill="#94a3b8" font-family="Arial" font-size="28">Generated image will appear here</text>
+  </svg>`
+)}`;
+
 function extractImageUrl(payload) {
-    const candidates = [
-        payload?.data?.imageUrl,
-        payload?.data?.image_url,
-        payload?.data?.url,
-        payload?.data?.presigned_url,
-        payload?.imageUrl,
-        payload?.image_url,
-        payload?.url,
-        payload?.presigned_url,
-        payload?.images?.[0],
-        payload?.data?.images?.[0],
-        payload?.data?.output?.[0]?.url,
-    ];
+  const candidates = [
+    payload?.data?.imageUrl,
+    payload?.data?.image_url,
+    payload?.data?.url,
+    payload?.data?.presigned_url,
+    payload?.data?.presigned_urls?.[0],
+    payload?.imageUrl,
+    payload?.image_url,
+    payload?.url,
+    payload?.presigned_url,
+    payload?.presigned_urls?.[0],
+    payload?.data?.images?.[0],
+    payload?.images?.[0],
+    payload?.data?.images?.[0]?.url,
+    payload?.images?.[0]?.url,
+  ];
 
-    for (const candidate of candidates) {
-        if (typeof candidate === 'string' && candidate.trim()) {
-            return candidate;
-        }
+  for (const value of candidates) {
+    if (typeof value === 'string' && value.trim()) return value;
+  }
+
+  const base64Candidates = [
+    payload?.data?.base64,
+    payload?.data?.imageBase64,
+    payload?.data?.image_base64,
+    payload?.data?.b64_json,
+    payload?.base64,
+    payload?.b64_json,
+  ];
+
+  for (const value of base64Candidates) {
+    if (typeof value === 'string' && value.trim()) {
+      return value.startsWith('data:') ? value : `data:image/png;base64,${value}`;
     }
-    return null;
-}
+  }
 
-export default function ImageAdGeneratorPage() {
-    const [openSection, setOpenSection] = useState('campaign');
-    const [isLoading, setIsLoading] = useState(false);
-    const [resultImageUrl, setResultImageUrl] = useState(null);
-    const [toast, setToast] = useState(null);
+  const s3Key = payload?.data?.s3_keys?.[0] || payload?.s3_keys?.[0];
+  if (typeof s3Key === 'string' && s3Key.trim()) {
+    return `https://reels-database.s3.amazonaws.com/${s3Key}`;
+  }
 
-    const [imageConfig, setImageConfig] = useState({
-        campaignGoal: '',
-        targetAudience: '',
-        tone: '',
-        stylePreference: '',
-        sceneType: '',
-        lighting: '',
-        composition: '',
-        brandColors: ['#000000', '#FFFFFF', '#6366f1'],
-        tagline: '',
-        offerText: '',
-        ctaText: '',
-        style: 'PHOTOREALISM',
-        width: 1024,
-        height: 1024,
-        quality: 'premium',
-        cfgScale: 8,
-        seed: 77,
-        numberOfImages: 1
-    });
-
-    const set = useCallback((path, val) => {
-        setImageConfig(prev => {
-            const next = { ...prev };
-            next[path] = val;
-            return next;
-        });
-    }, []);
-
-    const toggleSection = (id) => setOpenSection(openSection === id ? null : id);
-
-    const showToast = (msg, type = 'success') => {
-        setToast({ msg, type });
-        setTimeout(() => setToast(null), 4000);
-    };
-
-    // ── Validation — Required Fields ─────
-    const isValid = (
-        imageConfig.campaignGoal &&
-        imageConfig.targetAudience &&
-        imageConfig.tone &&
-        imageConfig.sceneType
-    );
-
-    const sectionValid = {
-        campaign: !!(imageConfig.campaignGoal && imageConfig.targetAudience && imageConfig.tone),
-        style: !!(imageConfig.stylePreference && imageConfig.sceneType && imageConfig.lighting),
-        content: !!(imageConfig.ctaText),
-        settings: !!(imageConfig.width && imageConfig.height),
-    };
-
-    const handleGenerate = async () => {
-        if (!isValid) return;
-        setIsLoading(true);
-        setResultImageUrl(null);
-
-        try {
-            const payload = {
-                ...imageConfig,
-                width: Number(imageConfig.width),
-                height: Number(imageConfig.height),
-                cfgScale: Number(imageConfig.cfgScale),
-                seed: Number(imageConfig.seed),
-                numberOfImages: Number(imageConfig.numberOfImages),
-                brandColors: (imageConfig.brandColors || []).filter(Boolean),
-            };
-
-            const response = await api.post(IMAGE_AD_API, payload);
-            const imageUrl = extractImageUrl(response?.data);
-
-            if (!imageUrl) {
-                const message = response?.data?.message || 'Image generated but no preview URL returned';
-                showToast(message, 'error');
-                return;
-            }
-
-            setResultImageUrl(imageUrl);
-            showToast('Image generated successfully!');
-        } catch (err) {
-            const errorMessage =
-                err?.response?.data?.message ||
-                err?.message ||
-                'Server error during image generation';
-            showToast(errorMessage, 'error');
-            console.error(err);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen bg-[#0a0a0a] text-slate-200">
-            {/* Header */}
-            <div className="border-b border-white/[0.05] bg-black/40 backdrop-blur-xl sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent">
-                            AI Image Ad Generator
-                        </h1>
-                        <p className="text-xs text-slate-500 mt-1">High-conversion product visuals in seconds</p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
-                            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                            <span className="text-xs font-semibold text-emerald-400 tracking-wide uppercase">150 Credits Left</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="max-w-7xl mx-auto px-6 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-                    {/* Left Column: Form (7 cols) */}
-                    <div className="lg:col-span-7 space-y-4">
-
-                        {/* 1. Campaign Setup */}
-                        <AccordionSection id="campaign" label="Campaign Setup" icon={BarChart2}
-                            open={openSection === 'campaign'} onToggle={toggleSection}
-                            isValid={sectionValid.campaign}>
-                            <div className="space-y-4">
-                                <div>
-                                    <Label required>Campaign Goal</Label>
-                                    <textarea className="input-field resize-none" rows={2}
-                                        placeholder="e.g. boost sales of boAt Airdopes wireless earbuds..."
-                                        value={imageConfig.campaignGoal}
-                                        onChange={e => set('campaignGoal', e.target.value)} />
-                                </div>
-                                <div>
-                                    <Label required>Target Audience</Label>
-                                    <input className="input-field"
-                                        placeholder="e.g. Indian youth aged 18-30 who enjoy music..."
-                                        value={imageConfig.targetAudience}
-                                        onChange={e => set('targetAudience', e.target.value)} />
-                                </div>
-                                <div>
-                                    <Label required>Tone</Label>
-                                    <PillSelector options={TONES} selected={imageConfig.tone}
-                                        onSelect={v => set('tone', v)} />
-                                </div>
-                            </div>
-                        </AccordionSection>
-
-                        {/* 2. Visual Style */}
-                        <AccordionSection id="style" label="Visual Style" icon={Image}
-                            open={openSection === 'style'} onToggle={toggleSection}
-                            isValid={sectionValid.style}>
-                            <div className="space-y-4">
-                                <div>
-                                    <Label>Style Preference</Label>
-                                    <input className="input-field"
-                                        placeholder="e.g. modern dark aesthetic with vibrant color accents"
-                                        value={imageConfig.stylePreference}
-                                        onChange={e => set('stylePreference', e.target.value)} />
-                                </div>
-                                <div>
-                                    <Label required>Scene Type</Label>
-                                    <textarea className="input-field resize-none" rows={2}
-                                        placeholder="e.g. a young person enjoying music outdoors in a modern urban environment"
-                                        value={imageConfig.sceneType}
-                                        onChange={e => set('sceneType', e.target.value)} />
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label>Lighting</Label>
-                                        <Select value={imageConfig.lighting} options={LIGHTING_OPTIONS}
-                                            onChange={v => set('lighting', v)} placeholder="Select lighting..." />
-                                    </div>
-                                    <div>
-                                        <Label>Composition</Label>
-                                        <Select value={imageConfig.composition} options={COMPOSITIONS}
-                                            onChange={v => set('composition', v)} placeholder="Select composition..." />
-                                    </div>
-                                </div>
-                            </div>
-                        </AccordionSection>
-
-                        {/* 3. Content & Brand */}
-                        <AccordionSection id="content" label="Content & Brand" icon={Palette}
-                            open={openSection === 'content'} onToggle={toggleSection}
-                            isValid={sectionValid.content}>
-                            <div className="space-y-4">
-                                <div>
-                                    <Label>Tagline</Label>
-                                    <input className="input-field" placeholder="e.g. Plug In. Tune Out."
-                                        value={imageConfig.tagline}
-                                        onChange={e => set('tagline', e.target.value)} />
-                                </div>
-                                <div>
-                                    <Label>Offer Text</Label>
-                                    <input className="input-field" placeholder="e.g. Flat 500 rupees off"
-                                        value={imageConfig.offerText}
-                                        onChange={e => set('offerText', e.target.value)} />
-                                </div>
-                                <div>
-                                    <Label required>CTA Text</Label>
-                                    <input className="input-field" placeholder="e.g. Shop Now on boAt"
-                                        value={imageConfig.ctaText}
-                                        onChange={e => set('ctaText', e.target.value)} />
-                                </div>
-                                <div>
-                                    <Label>Brand Colors</Label>
-                                    <div className="flex gap-2">
-                                        {imageConfig.brandColors.map((color, idx) => (
-                                            <input key={idx} type="color" className="w-10 h-10 rounded-lg bg-transparent border border-white/10 cursor-pointer"
-                                                value={color} onChange={e => {
-                                                    const newColors = [...imageConfig.brandColors];
-                                                    newColors[idx] = e.target.value;
-                                                    set('brandColors', newColors);
-                                                }} />
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </AccordionSection>
-
-                        {/* 4. Image Settings */}
-                        <AccordionSection id="settings" label="Image Settings" icon={Settings2}
-                            open={openSection === 'settings'} onToggle={toggleSection}
-                            isValid={sectionValid.settings}>
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <Label>Base Style</Label>
-                                        <Select value={imageConfig.style} options={STYLES}
-                                            onChange={v => set('style', v)} />
-                                    </div>
-                                    <div>
-                                        <Label>Quality</Label>
-                                        <Select value={imageConfig.quality} options={QUALITIES}
-                                            onChange={v => set('quality', v)} />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-4">
-                                    <div>
-                                        <Label>Width</Label>
-                                        <input type="number" className="input-field" value={imageConfig.width}
-                                            onChange={e => set('width', parseInt(e.target.value))} />
-                                    </div>
-                                    <div>
-                                        <Label>Height</Label>
-                                        <input type="number" className="input-field" value={imageConfig.height}
-                                            onChange={e => set('height', parseInt(e.target.value))} />
-                                    </div>
-                                    <div>
-                                        <Label>CFG Scale</Label>
-                                        <input type="number" className="input-field" value={imageConfig.cfgScale}
-                                            onChange={e => set('cfgScale', parseInt(e.target.value))} />
-                                    </div>
-                                </div>
-                            </div>
-                        </AccordionSection>
-
-                        <button
-                            disabled={!isValid || isLoading}
-                            onClick={handleGenerate}
-                            className={`w-full py-4 rounded-xl flex items-center justify-center gap-3 font-semibold transition-all duration-300 transform
-                                ${isValid && !isLoading
-                                    ? 'bg-brand text-white hover:bg-brand-light shadow-lg shadow-brand/20 scale-[1.01] active:scale-[0.99]'
-                                    : 'bg-white/5 text-slate-500 cursor-not-allowed border border-white/[0.05]'
-                                }`}>
-                            {isLoading ? (
-                                <><Loader2 className="w-5 h-5 animate-spin" /> Generating Magic...</>
-                            ) : (
-                                <><Zap className="w-5 h-5 fill-current" /> Generate Image Ad</>
-                            )}
-                        </button>
-                    </div>
-
-                    {/* Right Column: Preview (5 cols) */}
-                    <div className="lg:col-span-5 relative">
-                        <div className="sticky top-28 space-y-6">
-
-                            {/* Live Preview Console */}
-                            <div className="rounded-2xl bg-black/40 border border-white/[0.05] overflow-hidden">
-                                <div className="px-4 py-3 bg-white/[0.02] border-b border-white/[0.05] flex items-center justify-between">
-                                    <div className="flex items-center gap-2">
-                                        <Monitor className="w-4 h-4 text-brand-light" />
-                                        <span className="text-xs font-medium text-slate-400">Live Preview Console</span>
-                                    </div>
-                                    <div className="flex gap-1">
-                                        <div className="w-2 h-2 rounded-full bg-red-500/20" />
-                                        <div className="w-2 h-2 rounded-full bg-amber-500/20" />
-                                        <div className="w-2 h-2 rounded-full bg-emerald-500/20" />
-                                    </div>
-                                </div>
-                                <div className="p-6 aspect-square flex flex-col items-center justify-center relative overflow-hidden group">
-                                    {resultImageUrl ? (
-                                        <img src={resultImageUrl} alt="Generated Ad" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <div className="flex flex-col items-center text-center space-y-4">
-                                            <div className="w-16 h-16 rounded-2xl bg-white/[0.02] border border-white/[0.05] flex items-center justify-center group-hover:bg-brand/10 transition-colors">
-                                                <Image className="w-8 h-8 text-slate-700" />
-                                            </div>
-                                            <div className="max-w-[200px]">
-                                                <p className="text-sm font-medium text-slate-500 italic">"Fill in the details to visualize your campaign..."</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* Scanline Effect */}
-                                    <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[length:100%_4px,4px_100%] opacity-20" />
-                                </div>
-                            </div>
-
-                            {/* Prompt Mock */}
-                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] space-y-4">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <FileText className="w-4 h-4 text-emerald-400" />
-                                    <span className="text-xs font-semibold text-emerald-400 uppercase tracking-tighter">AI Processing Pipeline</span>
-                                </div>
-                                <div className="space-y-3 font-mono text-[11px] leading-relaxed">
-                                    <p className="text-slate-400">
-                                        <span className="text-emerald-500">INIT</span> image_generator_v2.bin<br />
-                                        <span className="text-emerald-500">STYLE</span> {imageConfig.style}<br />
-                                        <span className="text-brand-light">SCENE</span> {imageConfig.sceneType || 'Waiting for scene description...'}<br />
-                                        <span className="text-brand-light">LIGHT</span> {imageConfig.lighting || 'Balanced'}<br />
-                                        <span className="text-slate-600">--cfg_scale {imageConfig.cfgScale} --seed {imageConfig.seed}</span>
-                                    </p>
-                                </div>
-                            </motion.div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Toast */}
-            <AnimatePresence>
-                {toast && (
-                    <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
-                        className={`fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 z-50 border
-                            ${toast.type === 'error' ? 'bg-red-500/10 border-red-500/20' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
-                        {toast.type === 'error' ? <AlertCircle className="w-5 h-5 text-red-400" /> : <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
-                        <span className={`text-sm font-medium ${toast.type === 'error' ? 'text-red-400' : 'text-emerald-400'}`}>{toast.msg}</span>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
-}
-
-// ── Components ──────────────────────────────────────────────
-
-function AccordionSection({ id, label, icon: Icon, children, open, onToggle, isValid }) {
-    return (
-        <div className={`rounded-2xl border transition-all duration-300 overflow-hidden
-            ${open
-                ? 'bg-white/[0.03] border-white/10 ring-1 ring-white/10 shadow-2xl'
-                : 'bg-white/[0.01] border-white/[0.05] hover:bg-white/[0.02] hover:border-white/10 cursor-pointer'
-            }`}>
-            <div onClick={() => onToggle(id)} className="px-6 py-5 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <div className={`p-2.5 rounded-xl transition-colors
-                        ${open ? 'bg-brand/20 text-brand-light' : 'bg-white/[0.03] text-slate-500'}`}>
-                        <Icon className="w-5 h-5" />
-                    </div>
-                    <div>
-                        <h3 className={`font-semibold transition-colors ${open ? 'text-white' : 'text-slate-300'}`}>{label}</h3>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    {isValid && <CheckCircle2 className="w-4 h-4 text-emerald-500/50" />}
-                    {open ? <ChevronDown className="w-5 h-5 text-slate-600" /> : <ChevronRight className="w-5 h-5 text-slate-600" />}
-                </div>
-            </div>
-            <AnimatePresence>
-                {open && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
-                        <div className="px-6 pb-6 pt-2 border-t border-white/[0.05] space-y-6">
-                            {children}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </div>
-    );
+  return null;
 }
 
 function Label({ children, required }) {
-    return (
-        <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 ml-1">
-                {children} {required && <span className="text-brand-light ml-0.5">•</span>}
-            </span>
-        </div>
-    );
+  return (
+    <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wide">
+      {children}{required && <span className="text-brand-light ml-1">*</span>}
+    </label>
+  );
 }
 
-function Select({ value, options, onChange, placeholder = "Select..." }) {
-    return (
-        <div className="relative group">
-            <select value={value} onChange={e => onChange(e.target.value)}
-                className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand/30 transition-all appearance-none cursor-pointer">
-                <option value="" disabled className="bg-slate-900">{placeholder}</option>
-                {options.map(o => (
-                    <option key={o} value={o} className="bg-slate-900 text-slate-200 py-2">{o}</option>
-                ))}
-            </select>
-            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-600 pointer-events-none group-hover:text-slate-400 transition-colors" />
-        </div>
-    );
+function Select({ value, options, onChange, placeholder, ariaLabel }) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={ariaLabel || placeholder}
+      className="input-field"
+    >
+      <option value="">{placeholder || 'Select...'}</option>
+      {options.map((o) => (
+        <option key={o} value={o}>{o}</option>
+      ))}
+    </select>
+  );
 }
 
-function PillSelector({ options, selected, onSelect }) {
-    return (
-        <div className="flex flex-wrap gap-2">
-            {options.map(opt => (
-                <button key={opt} onClick={() => onSelect(opt)}
-                    className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all border
-                        ${selected === opt
-                            ? 'bg-brand/20 border-brand/40 text-brand-light shadow-lg shadow-brand/10'
-                            : 'bg-white/[0.02] border-white/[0.05] text-slate-500 hover:text-slate-300 hover:border-white/10'}`}>
-                    {opt}
-                </button>
-            ))}
+export default function ImageAdGeneratorPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [resultImageUrl, setResultImageUrl] = useState(DEFAULT_PREVIEW_IMAGE);
+  const [toast, setToast] = useState(null);
+
+  const [form, setForm] = useState({
+    campaignGoal: '',
+    targetAudience: '',
+    tone: '',
+    stylePreference: '',
+    sceneType: '',
+    lighting: '',
+    composition: '',
+    brandColors: ['#FF0000', '#000000', '#FFFFFF'],
+    tagline: '',
+    offerText: '',
+    ctaText: '',
+    style: 'PHOTOREALISM',
+    width: 1024,
+    height: 1024,
+    quality: 'premium',
+    cfgScale: 8,
+    seed: 77,
+    numberOfImages: 1,
+  });
+
+  const isValid = useMemo(
+    () => !!(form.campaignGoal && form.targetAudience && form.tone && form.sceneType),
+    [form]
+  );
+
+  const setValue = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleGenerate = async () => {
+    if (!isValid || isLoading) return;
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        ...form,
+        style: STYLE_FALLBACKS[String(form.style || '').toUpperCase()] || 'PHOTOREALISM',
+        width: Number(form.width),
+        height: Number(form.height),
+        cfgScale: Number(form.cfgScale),
+        seed: Number(form.seed),
+        numberOfImages: Number(form.numberOfImages),
+        brandColors: (form.brandColors || []).filter(Boolean),
+      };
+
+      const response = await api.post(IMAGE_AD_API, payload);
+      const imageUrl = extractImageUrl(response?.data);
+
+      if (!imageUrl) {
+        showToast(response?.data?.message || 'Image generated but no preview URL returned', 'error');
+        return;
+      }
+
+      setResultImageUrl(imageUrl);
+      showToast('Image generated successfully');
+    } catch (err) {
+      showToast(err?.response?.data?.message || err?.message || 'Image generation failed', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-screen-xl mx-auto text-slate-200">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <ImageIcon className="w-6 h-6 text-brand-light" /> AI Image Ad Generator
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">Simple flow: choose preset, adjust details, generate.</p>
         </div>
-    );
+        <div className="px-3 py-2 rounded-xl bg-brand/10 border border-brand/20 text-brand-light text-sm font-medium flex items-center gap-2">
+          <Sparkles className="w-4 h-4" /> Quick & Accessible UI
+        </div>
+      </div>
+
+      <div className="grid lg:grid-cols-5 gap-6 items-start">
+        <div className="lg:col-span-3 space-y-4">
+          <div className="glass-card p-4 grid md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <Label required>Campaign Goal</Label>
+              <textarea
+                rows={2}
+                className="input-field resize-none"
+                value={form.campaignGoal}
+                onChange={(e) => setValue('campaignGoal', e.target.value)}
+                placeholder="What do you want to achieve?"
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label required>Target Audience</Label>
+              <input
+                className="input-field"
+                value={form.targetAudience}
+                onChange={(e) => setValue('targetAudience', e.target.value)}
+                placeholder="Who is this ad for?"
+              />
+            </div>
+
+            <div>
+              <Label required>Tone</Label>
+              <Select value={form.tone} onChange={(v) => setValue('tone', v)} options={TONES} placeholder="Select tone" />
+            </div>
+
+            <div>
+              <Label>Base Style</Label>
+              <Select value={form.style} onChange={(v) => setValue('style', v)} options={STYLES} placeholder="Select style" />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label required>Scene Type</Label>
+              <textarea
+                rows={2}
+                className="input-field resize-none"
+                value={form.sceneType}
+                onChange={(e) => setValue('sceneType', e.target.value)}
+                placeholder="Describe the scene for the generated image"
+              />
+            </div>
+
+            <div>
+              <Label>Lighting</Label>
+              <Select value={form.lighting} onChange={(v) => setValue('lighting', v)} options={LIGHTING_OPTIONS} placeholder="Select lighting" />
+            </div>
+
+            <div>
+              <Label>Composition</Label>
+              <Select value={form.composition} onChange={(v) => setValue('composition', v)} options={COMPOSITIONS} placeholder="Select composition" />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label>Style Preference</Label>
+              <input
+                className="input-field"
+                value={form.stylePreference}
+                onChange={(e) => setValue('stylePreference', e.target.value)}
+                placeholder="Extra visual direction (optional)"
+              />
+            </div>
+
+            <div>
+              <Label>Tagline</Label>
+              <input className="input-field" value={form.tagline} onChange={(e) => setValue('tagline', e.target.value)} />
+            </div>
+            <div>
+              <Label>Offer Text</Label>
+              <input className="input-field" value={form.offerText} onChange={(e) => setValue('offerText', e.target.value)} />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label>CTA Text</Label>
+              <input className="input-field" value={form.ctaText} onChange={(e) => setValue('ctaText', e.target.value)} placeholder="e.g. Shop Now" />
+            </div>
+
+            <div className="md:col-span-2">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced((s) => !s)}
+                className="text-sm text-slate-400 hover:text-white flex items-center gap-2"
+              >
+                <SlidersHorizontal className="w-4 h-4" /> {showAdvanced ? 'Hide advanced settings' : 'Show advanced settings'}
+              </button>
+            </div>
+
+            {showAdvanced && (
+              <>
+                <div>
+                  <Label>Width</Label>
+                  <input type="number" className="input-field" value={form.width} onChange={(e) => setValue('width', Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>Height</Label>
+                  <input type="number" className="input-field" value={form.height} onChange={(e) => setValue('height', Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>Quality</Label>
+                  <Select value={form.quality} onChange={(v) => setValue('quality', v)} options={QUALITIES} placeholder="Select quality" />
+                </div>
+                <div>
+                  <Label>CFG Scale</Label>
+                  <input type="number" className="input-field" value={form.cfgScale} onChange={(e) => setValue('cfgScale', Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>Seed</Label>
+                  <input type="number" className="input-field" value={form.seed} onChange={(e) => setValue('seed', Number(e.target.value))} />
+                </div>
+                <div>
+                  <Label>No. of Images</Label>
+                  <input type="number" min={1} max={4} className="input-field" value={form.numberOfImages} onChange={(e) => setValue('numberOfImages', Number(e.target.value))} />
+                </div>
+              </>
+            )}
+
+            <div className="md:col-span-2 pt-2">
+              <button
+                disabled={!isValid || isLoading}
+                onClick={handleGenerate}
+                className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition
+                ${isValid && !isLoading
+                    ? 'bg-brand text-white hover:bg-brand-light'
+                    : 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed'}`}
+              >
+                {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</> : <><Wand2 className="w-4 h-4" /> Generate Image</>}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-2 space-y-4 sticky top-24">
+          <div className="glass-card p-4">
+            <p className="text-xs text-slate-500 uppercase tracking-widest font-semibold mb-3">Preview</p>
+            <div className="rounded-xl overflow-hidden border border-white/[0.08] bg-black/30 aspect-square">
+              <img src={resultImageUrl} alt="Generated preview" className="w-full h-full object-cover" />
+            </div>
+          </div>
+
+          <div className="glass-card p-4 space-y-2 text-xs">
+            <div className="flex justify-between"><span className="text-slate-500">Tone</span><span className="text-slate-300">{form.tone || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Style</span><span className="text-slate-300">{form.style}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Lighting</span><span className="text-slate-300">{form.lighting || '—'}</span></div>
+            <div className="flex justify-between"><span className="text-slate-500">Composition</span><span className="text-slate-300">{form.composition || '—'}</span></div>
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            role="status"
+            aria-live="polite"
+            className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-xl flex items-center gap-2 border text-sm
+              ${toast.type === 'error' ? 'bg-red-500/15 border-red-500/30 text-red-300' : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'}`}
+          >
+            {toast.type === 'error' ? <AlertCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
+            {toast.msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
 }

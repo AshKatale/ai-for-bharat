@@ -11,6 +11,8 @@ import ProductOnboardingPage from '../pages/ProductOnboardingPage';
 import SettingsPage from '../pages/SettingsPage';
 import VideoAdGeneratorPage from '../pages/VideoAdGeneratorPage';
 import ImageAdGeneratorPage from '../pages/ImageAdGeneratorPage';
+import PostGeneratorPage from '../pages/PostGeneratorPage';
+import ProductDashboardPage from '../pages/ProductDashboardPage';
 
 function AppRoutes() {
   return (
@@ -24,6 +26,9 @@ function AppRoutes() {
         <Route path="/signup" element={<SignupPage />} />
       </Route>
 
+      {/* Product Dashboard (public placeholder page) */}
+      <Route path="/products/:productId/dashboard" element={<ProductDashboardPage />} />
+
       {/* Dashboard (protected by sidebar layout) */}
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<OverviewPage />} />
@@ -32,6 +37,7 @@ function AppRoutes() {
         <Route path="add-product" element={<ProductOnboardingPage />} />
         <Route path="image-generator" element={<ImageAdGeneratorPage />} />
         <Route path="video-generator" element={<VideoAdGeneratorPage />} />
+        <Route path="post-generator" element={<PostGeneratorPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
 
