@@ -14,7 +14,7 @@ export default {
           dark: '#059669',
         },
         dark: {
-          base: '#020617',
+          base: '#000000',
           card: '#0a0f25',
           border: 'rgba(255,255,255,0.08)',
           muted: '#0f172a',

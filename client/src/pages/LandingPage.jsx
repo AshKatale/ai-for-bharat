@@ -1,4 +1,5 @@
 // LandingPage.jsx — No emojis version
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
@@ -51,37 +52,118 @@ const steps = [
   { no: '03', label: 'Get discovered', desc: 'Users find you through live AI-powered search.' },
 ];
 
-const LIVE_STEPS = [
-  { s: 'done', label: 'Query received: "AI image tools"' },
-  { s: 'done', label: 'Parsing query intent' },
-  { s: 'done', label: 'Fetching products from DynamoDB' },
-  { s: 'active', label: 'Filtering by category and tags' },
-  { s: 'pending', label: 'Ranking by engagement score' },
-  { s: 'pending', label: 'Results ready' },
+const LIVE_STEP_LABELS = [
+  'Query received: "AI image tools"',
+  'Parsing query intent',
+  'Fetching products',
+  'Filtering by category and tags',
+  'Ranking by engagement score',
+  'Results ready',
+];
+
+const LANDING_PRODUCTS = [
+  {
+    id: 'krishi-vision',
+    name: 'Krishi Vision AI',
+    category: 'AgriTech',
+    desc: 'Crop disease detection from mobile images with regional language recommendations.',
+    activeUsers: '12.4k',
+  },
+  {
+    id: 'swasthya-assist',
+    name: 'Swasthya Assist',
+    category: 'HealthTech',
+    desc: 'Clinical workflow co-pilot for triage summaries and appointment follow-up notes.',
+    activeUsers: '9.1k',
+  },
+  {
+    id: 'vakya-voice',
+    name: 'Vakya Voice',
+    category: 'Speech AI',
+    desc: 'Multilingual speech-to-text and voice assistant stack optimized for Indian accents.',
+    activeUsers: '18.7k',
+  },
+  {
+    id: 'dukan-genie',
+    name: 'Dukan Genie',
+    category: 'Commerce',
+    desc: 'Small business AI for catalog generation, campaign creatives, and sales automation.',
+    activeUsers: '7.6k',
+  },
 ];
 
 function LandingPage() {
+  const [activeStep, setActiveStep] = useState(0);
+  const [pulsePhase, setPulsePhase] = useState(0);
+  const [productQuery, setProductQuery] = useState('');
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveStep((prev) => (prev + 1) % LIVE_STEP_LABELS.length);
+    }, 1400);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const pulseTimer = setInterval(() => {
+      setPulsePhase((prev) => (prev + 1) % 20);
+    }, 180);
+
+    return () => clearInterval(pulseTimer);
+  }, []);
+
+  const liveSteps = LIVE_STEP_LABELS.map((label, i) => ({
+    label,
+    s: i < activeStep ? 'done' : i === activeStep ? 'active' : 'pending',
+  }));
+
+  const signalBars = [0, 1, 2, 3, 4].map((i) => {
+    const wave = (pulsePhase + i * 3) % 20;
+    const base = wave < 10 ? wave : 20 - wave;
+    return Math.max(30, base * 7 + 20);
+  });
+
+  const filteredProducts = useMemo(() => {
+    const query = productQuery.trim().toLowerCase();
+    if (!query) {
+      return LANDING_PRODUCTS;
+    }
+
+    return LANDING_PRODUCTS.filter((product) => {
+      return (
+        product.name.toLowerCase().includes(query) ||
+        product.category.toLowerCase().includes(query) ||
+        product.desc.toLowerCase().includes(query)
+      );
+    });
+  }, [productQuery]);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col landing-grid">
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-36 pb-24 px-4 text-center max-w-5xl mx-auto w-full">
+      <section className="pt-36 pb-24 px-4 text-center max-w-5xl mx-auto w-full relative">
+        <div className="hero-orb hero-orb-left" />
+        <div className="hero-orb hero-orb-right" />
+        <div className="hero-orb hero-orb-bottom" />
+
         <span className="inline-flex items-center gap-2 mb-6 text-xs font-medium px-4 py-1.5 rounded-full bg-brand/10 border border-brand/20 text-brand-light">
           <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" />
           India's AI Product Discovery Platform
         </span>
-        <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6">
+        <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight tracking-tight mb-6 animate-fade-slide">
           Discover AI Products{' '}
           <span className="gradient-text">Built for Bharat</span>
         </h1>
-        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in">
           Search, explore, and showcase AI tools built by Indian developers — with live transparency
           showing you every step taken behind the scenes.
         </p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Link to="/signup">
-            <button className="btn-primary text-base px-7 py-3">Get Started Free</button>
+            <button className="btn-primary text-base px-7 py-3 glow-button">Get Started Free</button>
           </Link>
           <Link to="/login">
             <button className="btn-outline text-base px-7 py-3">Sign In</button>
@@ -89,13 +171,19 @@ function LandingPage() {
         </div>
 
         {/* Live simulation preview strip */}
-        <div className="mt-14 glass-card max-w-2xl mx-auto p-5 text-left">
-          <p className="text-xs text-slate-500 mb-4 uppercase tracking-widest font-semibold">
-            Live simulation preview
-          </p>
-          <div className="space-y-2.5">
-            {LIVE_STEPS.map((item, i) => (
-              <div key={i} className="flex items-center gap-3">
+        <div className="mt-14 glass-card simulation-card max-w-2xl mx-auto p-5 text-left">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <p className="text-xs text-slate-400 uppercase tracking-widest font-semibold">
+              Live simulation preview
+            </p>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse-dot" />
+              <span className="text-[11px] text-emerald-300 font-medium">Realtime</span>
+            </div>
+          </div>
+          <div className="space-y-2.5 relative z-10">
+            {liveSteps.map((item, i) => (
+              <div key={item.label} className={`flex items-center gap-3 live-step-row ${item.s === 'active' ? 'live-step-active-row' : ''}`}>
                 {item.s === 'done' && (
                   <svg className="w-4 h-4 text-emerald-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
@@ -109,17 +197,95 @@ function LandingPage() {
                 {item.s === 'pending' && (
                   <span className="w-4 h-4 rounded-full border-2 border-slate-700 shrink-0 inline-block" />
                 )}
-                <span className={`text-sm ${item.s === 'done' ? 'text-slate-300' :
+                <span className={`text-sm transition-colors duration-300 ${item.s === 'done' ? 'text-slate-300' :
                   item.s === 'active' ? 'text-white font-medium' :
                     'text-slate-600'
                   }`}>{item.label}</span>
                 {item.s === 'active' && (
-                  <span className="ml-auto text-xs text-brand-light font-mono">running...</span>
+                  <span className="ml-auto text-xs text-brand-light font-mono live-running">running...</span>
                 )}
               </div>
             ))}
           </div>
+
+          <div className="mt-5 pt-4 border-t border-white/10 relative z-10">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[11px] text-slate-500 uppercase tracking-wider">Signal strength</span>
+              <span className="text-[11px] text-slate-400 font-mono">42ms latency</span>
+            </div>
+            <div className="flex items-end gap-1 h-8">
+              {signalBars.map((h, i) => (
+                <span
+                  key={`bar-${i}`}
+                  className="w-2 rounded-t bg-gradient-to-t from-emerald-600/80 to-brand-light/90 transition-all duration-200"
+                  style={{ height: `${h}%` }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
+      </section>
+
+      {/* Search + Product quick access */}
+      <section className="pb-10 px-4 max-w-6xl mx-auto w-full">
+        <div className="glass-card p-5 md:p-6 product-search-shell">
+          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+            <div className="flex-1">
+              <label htmlFor="landing-product-search" className="sr-only">Search your product</label>
+              <input
+                id="landing-product-search"
+                type="text"
+                value={productQuery}
+                onChange={(e) => setProductQuery(e.target.value)}
+                placeholder="Search your product by name, category, or keyword"
+                className="input-field"
+              />
+            </div>
+            <Link to="/dashboard/add-product" className="md:shrink-0">
+              <button className="btn-primary w-full md:w-auto px-6 py-3">Add Product</button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Added products list */}
+      <section className="pb-20 px-4 max-w-6xl mx-auto w-full">
+        <div className="flex items-center justify-between mb-6 gap-3">
+          <h2 className="text-2xl md:text-3xl font-bold text-white">
+            Your Added <span className="gradient-text">Products</span>
+          </h2>
+          <span className="text-xs text-slate-500 uppercase tracking-wider">
+            {filteredProducts.length} listed
+          </span>
+        </div>
+
+        {filteredProducts.length === 0 ? (
+          <div className="glass-card p-8 text-center text-slate-400">
+            No products matched your search.
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-5">
+            {filteredProducts.map((product) => (
+              <Link
+                key={product.id}
+                to={`/products/${product.id}/dashboard`}
+                className="glass-card p-5 product-card-link block"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/5 text-brand-light border border-white/10">
+                    {product.category}
+                  </span>
+                  <span className="text-xs text-slate-500">Active users: {product.activeUsers}</span>
+                </div>
+                <h3 className="text-lg font-semibold text-white mb-2">{product.name}</h3>
+                <p className="text-sm text-slate-400 leading-relaxed">{product.desc}</p>
+                <p className="mt-4 text-xs text-brand-light uppercase tracking-wider font-semibold">
+                  Open product dashboard
+                </p>
+              </Link>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Features */}
@@ -129,7 +295,7 @@ function LandingPage() {
         </h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
           {features.map((f, i) => (
-            <div key={i} className="glass-card p-5">
+            <div key={i} className="glass-card p-5 feature-card" style={{ animationDelay: `${i * 80}ms` }}>
               <div className="p-2.5 rounded-lg bg-white/5 w-fit mb-4">{f.icon}</div>
               <h3 className="text-base font-semibold text-white mb-2">{f.title}</h3>
               <p className="text-sm text-slate-400 leading-relaxed">{f.desc}</p>
@@ -143,7 +309,7 @@ function LandingPage() {
         <h2 className="text-3xl font-bold text-white text-center mb-12">How it works</h2>
         <div className="grid md:grid-cols-3 gap-6">
           {steps.map((s, i) => (
-            <div key={i} className="glass-card p-6 text-center">
+            <div key={i} className="glass-card p-6 text-center step-card" style={{ animationDelay: `${i * 110}ms` }}>
               <div className="text-4xl font-black gradient-text mb-3">{s.no}</div>
               <h3 className="text-base font-semibold text-white mb-2">{s.label}</h3>
               <p className="text-sm text-slate-400">{s.desc}</p>
@@ -154,7 +320,7 @@ function LandingPage() {
 
       {/* CTA */}
       <section className="py-20 px-4 text-center">
-        <div className="glass-card max-w-2xl mx-auto p-12">
+        <div className="glass-card cta-card max-w-2xl mx-auto p-12">
           <h2 className="text-3xl font-bold text-white mb-4">Ready to get discovered?</h2>
           <p className="text-slate-400 mb-8">Join the platform built for India's AI builders.</p>
           <Link to="/signup">
