@@ -72,13 +72,10 @@ class Product {
         description: productData.description || '',
         shortDescription: productData.shortDescription || '',
         category: productData.category || 'other',
-        status: productData.status || 'draft', // draft, active, archived, discontinued
         tags: productData.tags || [],
         image: productData.image || null,
         images: productData.images || [],
-        version: productData.version || '1.0.0',
-        license: productData.license || 'MIT',
-        
+        version: productData.version || '1.0.0',        
         // Repository information
         repositories: {
           frontend: productData.repositories?.frontend || '',
@@ -108,27 +105,6 @@ class Product {
         // Product features and tech
         features: productData.features || [],
         technologies: productData.technologies || [],
-
-        // Statistics
-        stats: {
-          downloads: productData.stats?.downloads || 0,
-          stars: productData.stats?.stars || 0,
-          views: productData.stats?.views || 0,
-          users: productData.stats?.users || 0,
-          rating: productData.stats?.rating || 0,
-          reviews: productData.stats?.reviews || 0,
-        },
-
-        // Pricing information
-        pricing: {
-          model: productData.pricing?.model || 'free', // free, freemium, paid
-          price: productData.pricing?.price || 0,
-          currency: productData.pricing?.currency || 'USD',
-          billingCycle: productData.pricing?.billingCycle || null,
-        },
-
-        // Team members
-        team: productData.team || [],
 
         // Timestamps
         launchedAt: productData.launchedAt || null,
