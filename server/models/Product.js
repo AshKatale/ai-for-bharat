@@ -17,7 +17,6 @@ const dynamodbService = new DynamoDBService(DYNAMODB_PRODUCTS_TABLE_NAME);
  * @property {string} description - Detailed product description
  * @property {string} shortDescription - Short product description (for listings)
  * @property {string} category - Product category
- * @property {string} status - Product status (draft, active, archived, discontinued)
  * @property {Array<string>} tags - Product tags/keywords
  * @property {string} image - Product thumbnail image URL
  * @property {Array<string>} images - Array of product image URLs
@@ -42,19 +41,6 @@ const dynamodbService = new DynamoDBService(DYNAMODB_PRODUCTS_TABLE_NAME);
  * @property {string} socialMedia.discord - Discord server URL
  * @property {Array<string>} features - Array of product features
  * @property {Array<string>} technologies - Technologies used
- * @property {Object} stats - Product statistics
- * @property {number} stats.downloads - Total downloads
- * @property {number} stats.stars - GitHub stars/follows
- * @property {number} stats.views - Page views
- * @property {number} stats.users - Number of active users
- * @property {number} stats.rating - Average rating (0-5)
- * @property {number} stats.reviews - Number of reviews
- * @property {Object} pricing - Pricing information
- * @property {string} pricing.model - Pricing model (free, freemium, paid)
- * @property {number} pricing.price - Price (if paid)
- * @property {string} pricing.currency - Currency code
- * @property {string} pricing.billingCycle - Billing cycle (monthly, yearly)
- * @property {Array<string>} team - Team member user IDs
  * @property {Date} launchedAt - Product launch date
  * @property {Date} createdAt - Product creation timestamp
  * @property {Date} updatedAt - Last update timestamp
