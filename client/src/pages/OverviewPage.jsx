@@ -92,17 +92,8 @@ function OverviewPage() {
       )}
 
       {/* Quick actions */}
-      <div className="grid md:grid-cols-2 gap-5 mb-8">
-        <div className="glass-card p-6">
-          <h2 className="text-base font-semibold text-white mb-2">Live Search</h2>
-          <p className="text-sm text-slate-400 mb-4">
-            Search for Indian AI products and watch real backend operations stream live.
-          </p>
-          <Link to="/dashboard/search">
-            <button className="btn-primary text-sm">Open Live Search</button>
-          </Link>
-        </div>
-        <div className="glass-card p-6">
+      <div className="mb-8">
+        <div className="glass-card p-6 border border-brand/20 bg-brand/5">
           <h2 className="text-base font-semibold text-white mb-2">List Your Product</h2>
           <p className="text-sm text-slate-400 mb-4">
             Onboard your AI tool and reach thousands of Indian developers.

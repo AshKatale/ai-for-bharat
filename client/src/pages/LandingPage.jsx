@@ -96,6 +96,7 @@ function LandingPage() {
   const [activeStep, setActiveStep] = useState(0);
   const [pulsePhase, setPulsePhase] = useState(0);
   const [productQuery, setProductQuery] = useState('');
+  const [addedProducts, setAddedProducts] = useState([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -124,20 +125,54 @@ function LandingPage() {
     return Math.max(30, base * 7 + 20);
   });
 
+  useEffect(() => {
+    const parseAddedProducts = () => {
+      try {
+        const raw = JSON.parse(localStorage.getItem('landing_added_products') || '[]');
+        if (!Array.isArray(raw)) {
+          setAddedProducts([]);
+          return;
+        }
+        setAddedProducts(raw);
+      } catch {
+        setAddedProducts([]);
+      }
+    };
+
+    parseAddedProducts();
+    window.addEventListener('storage', parseAddedProducts);
+    return () => window.removeEventListener('storage', parseAddedProducts);
+  }, []);
+
+  const listedProducts = useMemo(() => {
+    const merged = [...addedProducts, ...LANDING_PRODUCTS];
+    const unique = [];
+    const seen = new Set();
+
+    for (const product of merged) {
+      const key = product.id;
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      unique.push(product);
+    }
+
+    return unique;
+  }, [addedProducts]);
+
   const filteredProducts = useMemo(() => {
     const query = productQuery.trim().toLowerCase();
     if (!query) {
-      return LANDING_PRODUCTS;
+      return listedProducts;
     }
 
-    return LANDING_PRODUCTS.filter((product) => {
+    return listedProducts.filter((product) => {
       return (
         product.name.toLowerCase().includes(query) ||
         product.category.toLowerCase().includes(query) ||
         product.desc.toLowerCase().includes(query)
       );
     });
-  }, [productQuery]);
+  }, [productQuery, listedProducts]);
 
   return (
     <div className="min-h-screen flex flex-col landing-grid">
@@ -241,7 +276,7 @@ function LandingPage() {
                 className="input-field"
               />
             </div>
-            <Link to="/dashboard/add-product" className="md:shrink-0">
+            <Link to="/add-product" className="md:shrink-0">
               <button className="btn-primary w-full md:w-auto px-6 py-3">Add Product</button>
             </Link>
           </div>

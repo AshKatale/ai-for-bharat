@@ -1,5 +1,5 @@
 // ProductCard.jsx — no emojis, uses text labels for stats
-
+import { useNavigate } from 'react-router-dom';
 function StatBadge({ label, value }) {
     return (
         <div className="flex items-center gap-1">
@@ -26,6 +26,7 @@ function CategoryBadge({ category }) {
 }
 
 function ProductCard({ product, index = 0 }) {
+    const navigate = useNavigate();
     const {
         name = '',
         shortDescription = '',
@@ -40,79 +41,87 @@ function ProductCard({ product, index = 0 }) {
 
     return (
         <div
-            className="glass-card p-5 animate-fade-slide"
-            style={{ animationDelay: `${index * 0.07}s`, animationFillMode: 'both', opacity: 0 }}
+            onClick={() => navigate(`/products/${product.productId || product.id}/dashboard`)}
+            className="glass-card flex flex-col h-full hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-shadow duration-300 animate-fade-slide relative overflow-hidden group cursor-pointer"
+            style={{ animationDelay: `${index * 0.07}s`, animationFillMode: 'both' }}
         >
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <h3 className="text-base font-semibold text-white truncate">{name}</h3>
-                        <CategoryBadge category={category} />
-                        {pricing.model === 'free' && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium">
-                                Free
+
+            <div className="p-5 flex-1 flex flex-col">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <h3 className="text-base font-semibold text-white truncate group-hover:text-emerald-400 transition-colors">{name}</h3>
+                            <CategoryBadge category={category} />
+                            {pricing.model === 'free' && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-medium z-20 relative">
+                                    Free
+                                </span>
+                            )}
+                            {pricing.model === 'paid' && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium z-20 relative">
+                                    ${pricing.price}
+                                </span>
+                            )}
+                        </div>
+                        <p className="text-sm text-slate-400 leading-relaxed line-clamp-2 relative z-20">
+                            {shortDescription}
+                        </p>
+                    </div>
+                </div>
+
+                {/* Tags */}
+                {tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-4 relative z-20">
+                        {tags.slice(0, 5).map(tag => (
+                            <span key={tag}
+                                className="text-xs px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/[0.08]">
+                                {tag}
                             </span>
+                        ))}
+                    </div>
+                )}
+
+                <div className="mt-auto">
+                    {/* Stats */}
+                    <div className="flex items-center gap-5 py-3 border-t border-b border-white/[0.06] mb-4 relative z-20">
+                        <StatBadge label="Downloads" value={stats.downloads ?? 0} />
+                        <StatBadge label="Stars" value={stats.stars ?? 0} />
+                        <StatBadge label="Views" value={stats.views ?? 0} />
+                        <StatBadge label="Users" value={stats.users ?? 0} />
+                    </div>
+
+                    {/* Tech stack */}
+                    {technologies.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mb-4 relative z-20">
+                            {technologies.slice(0, 4).map(t => (
+                                <span key={t}
+                                    className="text-[10px] px-2 py-0.5 rounded-full bg-brand/10 text-brand-light border border-brand/20 font-mono">
+                                    {t}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Links */}
+                    <div className="flex items-center gap-2 flex-wrap relative z-20">
+                        {links.demo && (
+                            <a href={links.demo} onClick={e => e.stopPropagation()} target="_blank" rel="noreferrer" className="btn-primary text-xs py-1.5 px-3">
+                                Live Demo
+                            </a>
                         )}
-                        {pricing.model === 'paid' && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-                                ${pricing.price}
-                            </span>
+                        {repositories.frontend && (
+                            <a href={repositories.frontend} onClick={e => e.stopPropagation()} target="_blank" rel="noreferrer" className="btn-outline text-xs py-1.5 px-3">
+                                GitHub
+                            </a>
+                        )}
+                        {links.docs && (
+                            <a href={links.docs} onClick={e => e.stopPropagation()} target="_blank" rel="noreferrer" className="btn-ghost text-xs py-1.5 px-3">
+                                Docs
+                            </a>
                         )}
                     </div>
-                    <p className="text-sm text-slate-400 leading-relaxed line-clamp-2">{shortDescription}</p>
                 </div>
-            </div>
-
-            {/* Tags */}
-            {tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                    {tags.slice(0, 5).map(tag => (
-                        <span key={tag}
-                            className="text-xs px-2 py-0.5 rounded bg-white/5 text-slate-400 border border-white/[0.08]">
-                            {tag}
-                        </span>
-                    ))}
-                </div>
-            )}
-
-            {/* Stats */}
-            <div className="flex items-center gap-5 py-3 border-t border-b border-white/[0.06] mb-4">
-                <StatBadge label="Downloads" value={stats.downloads ?? 0} />
-                <StatBadge label="Stars" value={stats.stars ?? 0} />
-                <StatBadge label="Views" value={stats.views ?? 0} />
-                <StatBadge label="Users" value={stats.users ?? 0} />
-            </div>
-
-            {/* Tech stack */}
-            {technologies.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mb-4">
-                    {technologies.slice(0, 4).map(t => (
-                        <span key={t}
-                            className="text-[10px] px-2 py-0.5 rounded-full bg-brand/10 text-brand-light border border-brand/20 font-mono">
-                            {t}
-                        </span>
-                    ))}
-                </div>
-            )}
-
-            {/* Links */}
-            <div className="flex items-center gap-2 flex-wrap">
-                {links.demo && (
-                    <a href={links.demo} target="_blank" rel="noreferrer" className="btn-primary text-xs py-1.5 px-3">
-                        Live Demo
-                    </a>
-                )}
-                {repositories.frontend && (
-                    <a href={repositories.frontend} target="_blank" rel="noreferrer" className="btn-outline text-xs py-1.5 px-3">
-                        GitHub
-                    </a>
-                )}
-                {links.docs && (
-                    <a href={links.docs} target="_blank" rel="noreferrer" className="btn-ghost text-xs py-1.5 px-3">
-                        Docs
-                    </a>
-                )}
             </div>
         </div>
     );
