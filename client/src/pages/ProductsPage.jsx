@@ -14,14 +14,33 @@ function ProductsPage() {
     const [search, setSearch] = useState('');
 
     useEffect(() => {
-        api.get('/products')
-            .then(({ data }) => {
-                const list = data?.data || data || [];
-                setProducts(list);
-                setFiltered(list);
-            })
-            .catch(() => setProducts([]))
-            .finally(() => setLoading(false));
+        const userStr = localStorage.getItem('user');
+        if (!userStr) {
+            setLoading(false);
+            return;
+        }
+
+        try {
+            const user = JSON.parse(userStr);
+            const userId = user?.id;
+            
+            if (!userId) {
+                setLoading(false);
+                return;
+            }
+
+            api.get(`/products/user/${userId}`)
+                .then(({ data }) => {
+                    const list = data?.data || data || [];
+                    setProducts(list);
+                    setFiltered(list);
+                })
+                .catch(() => setProducts([]))
+                .finally(() => setLoading(false));
+        } catch (error) {
+            console.error('Error parsing user from localStorage:', error);
+            setLoading(false);
+        }
     }, []);
 
     useEffect(() => {
