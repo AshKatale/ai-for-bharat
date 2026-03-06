@@ -61,42 +61,10 @@ const LIVE_STEP_LABELS = [
   'Results ready',
 ];
 
-const LANDING_PRODUCTS = [
-  {
-    id: 'krishi-vision',
-    name: 'Krishi Vision AI',
-    category: 'AgriTech',
-    desc: 'Crop disease detection from mobile images with regional language recommendations.',
-    activeUsers: '12.4k',
-  },
-  {
-    id: 'swasthya-assist',
-    name: 'Swasthya Assist',
-    category: 'HealthTech',
-    desc: 'Clinical workflow co-pilot for triage summaries and appointment follow-up notes.',
-    activeUsers: '9.1k',
-  },
-  {
-    id: 'vakya-voice',
-    name: 'Vakya Voice',
-    category: 'Speech AI',
-    desc: 'Multilingual speech-to-text and voice assistant stack optimized for Indian accents.',
-    activeUsers: '18.7k',
-  },
-  {
-    id: 'dukan-genie',
-    name: 'Dukan Genie',
-    category: 'Commerce',
-    desc: 'Small business AI for catalog generation, campaign creatives, and sales automation.',
-    activeUsers: '7.6k',
-  },
-];
-
 function LandingPage() {
   const [activeStep, setActiveStep] = useState(0);
   const [pulsePhase, setPulsePhase] = useState(0);
   const [productQuery, setProductQuery] = useState('');
-  const [addedProducts, setAddedProducts] = useState([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -124,55 +92,6 @@ function LandingPage() {
     const base = wave < 10 ? wave : 20 - wave;
     return Math.max(30, base * 7 + 20);
   });
-
-  useEffect(() => {
-    const parseAddedProducts = () => {
-      try {
-        const raw = JSON.parse(localStorage.getItem('landing_added_products') || '[]');
-        if (!Array.isArray(raw)) {
-          setAddedProducts([]);
-          return;
-        }
-        setAddedProducts(raw);
-      } catch {
-        setAddedProducts([]);
-      }
-    };
-
-    parseAddedProducts();
-    window.addEventListener('storage', parseAddedProducts);
-    return () => window.removeEventListener('storage', parseAddedProducts);
-  }, []);
-
-  const listedProducts = useMemo(() => {
-    const merged = [...addedProducts, ...LANDING_PRODUCTS];
-    const unique = [];
-    const seen = new Set();
-
-    for (const product of merged) {
-      const key = product.id;
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      unique.push(product);
-    }
-
-    return unique;
-  }, [addedProducts]);
-
-  const filteredProducts = useMemo(() => {
-    const query = productQuery.trim().toLowerCase();
-    if (!query) {
-      return listedProducts;
-    }
-
-    return listedProducts.filter((product) => {
-      return (
-        product.name.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query) ||
-        product.desc.toLowerCase().includes(query)
-      );
-    });
-  }, [productQuery, listedProducts]);
 
   return (
     <div className="min-h-screen flex flex-col landing-grid">
@@ -259,68 +178,6 @@ function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Search + Product quick access */}
-      <section className="pb-10 px-4 max-w-6xl mx-auto w-full">
-        <div className="glass-card p-5 md:p-6 product-search-shell">
-          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center">
-            <div className="flex-1">
-              <label htmlFor="landing-product-search" className="sr-only">Search your product</label>
-              <input
-                id="landing-product-search"
-                type="text"
-                value={productQuery}
-                onChange={(e) => setProductQuery(e.target.value)}
-                placeholder="Search your product by name, category, or keyword"
-                className="input-field"
-              />
-            </div>
-            <Link to="/add-product" className="md:shrink-0">
-              <button className="btn-primary w-full md:w-auto px-6 py-3">Add Product</button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Added products list */}
-      <section className="pb-20 px-4 max-w-6xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-6 gap-3">
-          <h2 className="text-2xl md:text-3xl font-bold text-white">
-            Your Added <span className="gradient-text">Products</span>
-          </h2>
-          <span className="text-xs text-slate-500 uppercase tracking-wider">
-            {filteredProducts.length} listed
-          </span>
-        </div>
-
-        {filteredProducts.length === 0 ? (
-          <div className="glass-card p-8 text-center text-slate-400">
-            No products matched your search.
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-5">
-            {filteredProducts.map((product) => (
-              <Link
-                key={product.id}
-                to={`/products/${product.id}/dashboard`}
-                className="glass-card p-5 product-card-link block"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-white/5 text-brand-light border border-white/10">
-                    {product.category}
-                  </span>
-                  <span className="text-xs text-slate-500">Active users: {product.activeUsers}</span>
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">{product.name}</h3>
-                <p className="text-sm text-slate-400 leading-relaxed">{product.desc}</p>
-                <p className="mt-4 text-xs text-brand-light uppercase tracking-wider font-semibold">
-                  Open product dashboard
-                </p>
-              </Link>
-            ))}
-          </div>
-        )}
       </section>
 
       {/* Features */}
