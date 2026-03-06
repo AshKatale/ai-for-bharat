@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const logger = require('./utils/logger');
 const { PORT, NODE_ENV } = require('./config/env');
+const cookieParser = require('cookie-parser');
 const corsMiddleware = require('./middleware/corsMiddleware');
 const errorHandler = require('./middleware/errorHandler');
 const userRoutes    = require('./routes/userRoutes');
@@ -11,6 +12,7 @@ const productRoutes = require('./routes/productRoutes');
 const geoRoutes     = require('./routes/geoRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
+const linkedinRoutes = require('./routes/linkedinRoutes');
 const { initializeAWSServices, testAWSConnectivity } = require('./services/awsServices');
 
 
@@ -19,6 +21,7 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(corsMiddleware);
 
 // Request logging middleware
@@ -35,6 +38,9 @@ app.use('/api/questions',questionRoutes);
 app.use('/api/evaluate', evaluationRoutes);
 app.use('/api/aws',      require('./routes/awsRoutes'));
 app.use('/api/sentiment',require('./routes/sentimentRoutes'));
+
+// LinkedIn Auth & Posting Routes (mount at root since routes handle /auth/linkedin and /linkedin/post directly)
+app.use('/', linkedinRoutes);
 
 
 // Health check endpoint

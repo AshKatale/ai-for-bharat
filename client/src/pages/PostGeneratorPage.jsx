@@ -1,9 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AlertCircle, CheckCircle2, FileText, Image as ImageIcon, Loader2, Video } from 'lucide-react';
+import { AlertCircle, CheckCircle2, FileText, Image as ImageIcon, Loader2, Video, Linkedin } from 'lucide-react';
+import axios from 'axios';
 import api from '../services/api';
 
 const POST_GENERATOR_API = '/products/generate-post';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const POST_LANGUAGES = ['english', 'hindi', 'hinglish', 'hindi-in-english'];
 const TONES = ['professional', 'energetic', 'witty', 'casual', 'friendly'];
@@ -60,9 +62,8 @@ function Toggle({ checked, onChange, label, description }) {
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className={`w-full text-left p-3 rounded-xl border transition ${
-        checked ? 'border-brand/40 bg-brand/10' : 'border-white/[0.08] bg-white/5'
-      }`}
+      className={`w-full text-left p-3 rounded-xl border transition ${checked ? 'border-brand/40 bg-brand/10' : 'border-white/[0.08] bg-white/5'
+        }`}
     >
       <div className="flex items-center justify-between gap-3">
         <div>
@@ -127,11 +128,10 @@ function Toast({ type, message }) {
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: 18 }}
-      className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl border text-sm ${
-        type === 'error'
-          ? 'bg-red-500/15 border-red-500/30 text-red-300'
-          : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
-      }`}
+      className={`fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-3 rounded-xl border text-sm ${type === 'error'
+        ? 'bg-red-500/15 border-red-500/30 text-red-300'
+        : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300'
+        }`}
     >
       {type === 'error' ? <AlertCircle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
       {message}
@@ -142,10 +142,41 @@ function Toast({ type, message }) {
 export default function PostGeneratorPage() {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
-  const [result, setResult] = useState(null);
-  const [previewImage, setPreviewImage] = useState(DEFAULT_PREVIEW_IMAGE);
-  const [previewVideo, setPreviewVideo] = useState(null);
+  const [result, setResult] = useState(() => {
+    const saved = sessionStorage.getItem('ai_bharat_post_result');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [previewImage, setPreviewImage] = useState(() => {
+    return sessionStorage.getItem('ai_bharat_preview_img') || DEFAULT_PREVIEW_IMAGE;
+  });
+  const [previewVideo, setPreviewVideo] = useState(() => {
+    return sessionStorage.getItem('ai_bharat_preview_vid') || null;
+  });
   const [videoLoadError, setVideoLoadError] = useState(false);
+
+  const [isLinkedInConnected, setIsLinkedInConnected] = useState(false);
+  const [linkedInName, setLinkedInName] = useState('');
+  const [postingToLinkedIn, setPostingToLinkedIn] = useState(false);
+  const [linkedInPostUrl, setLinkedInPostUrl] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('linkedin_connected') === 'true') {
+      params.delete('linkedin_connected');
+      const newUrl = window.location.pathname + (params.toString() ? `?${params.toString()}` : '');
+      window.history.replaceState({}, '', newUrl);
+      setTimeout(() => setToast({ type: 'success', message: 'LinkedIn connected successfully!' }), 500);
+    }
+
+    axios.get(`${API_BASE_URL}/auth/linkedin/status`, { withCredentials: true })
+      .then((res) => {
+        if (res.data?.connected) {
+          setIsLinkedInConnected(true);
+          setLinkedInName(res.data.name);
+        }
+      })
+      .catch((err) => console.error('Failed to fetch LinkedIn status', err));
+  }, []);
 
   const [form, setForm] = useState({
     productId: '',
@@ -233,11 +264,64 @@ export default function PostGeneratorPage() {
       setPreviewImage(generatedImageUrl || DEFAULT_PREVIEW_IMAGE);
       setPreviewVideo(generatedVideoUrl || null);
       setVideoLoadError(false);
+
+      // Persist to session storage so data survives LinkedIn OAuth redirect
+      sessionStorage.setItem('ai_bharat_post_result', JSON.stringify(responseData));
+      sessionStorage.setItem('ai_bharat_preview_img', generatedImageUrl || DEFAULT_PREVIEW_IMAGE);
+      if (generatedVideoUrl) {
+        sessionStorage.setItem('ai_bharat_preview_vid', generatedVideoUrl);
+      } else {
+        sessionStorage.removeItem('ai_bharat_preview_vid');
+      }
+
       showToast('success', 'Post generated successfully');
     } catch (error) {
       showToast('error', error?.response?.data?.message || error?.message || 'Failed to generate post');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePostToLinkedIn = async () => {
+    const pData = result?.post?.post;
+    if (!pData || postingToLinkedIn) return;
+
+    let fullPost = [
+      pData.title,
+      pData.subtitle,
+      '',
+      pData.content,
+      '',
+      pData.cta,
+      '',
+      Array.isArray(pData.hashtags) ? pData.hashtags.join(' ') : ''
+    ].filter(Boolean).join('\n');
+
+    if (fullPost.length > 3000) {
+      showToast('error', `Post is ${fullPost.length} chars. Max is 3000. Trimming to fit.`);
+      fullPost = fullPost.substring(0, 2997) + '...';
+    }
+
+    setPostingToLinkedIn(true);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/linkedin/post`, { post_text: fullPost }, { withCredentials: true });
+      if (response.data?.success) {
+        setLinkedInPostUrl(response.data.post_url);
+        showToast('success', 'Successfully posted to LinkedIn!');
+      }
+    } catch (error) {
+      const errData = error.response?.data;
+      if (errData?.error === 'token_expired') {
+        setIsLinkedInConnected(false);
+        showToast('error', 'LinkedIn session expired. Reconnect to post.');
+      } else if (errData?.error === 'permission_denied') {
+        showToast('error', 'LinkedIn permissions missing. Please reconnect and approve all permissions.');
+        setIsLinkedInConnected(false);
+      } else {
+        showToast('error', 'Posting failed. Please try again.');
+      }
+    } finally {
+      setPostingToLinkedIn(false);
     }
   };
 
@@ -466,11 +550,10 @@ export default function PostGeneratorPage() {
               <button
                 onClick={handleGenerate}
                 disabled={!isValid || loading}
-                className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${
-                  isValid && !loading
-                    ? 'bg-brand text-white hover:bg-brand-light'
-                    : 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed'
-                }`}
+                className={`w-full py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition ${isValid && !loading
+                  ? 'bg-brand text-white hover:bg-brand-light'
+                  : 'bg-white/5 border border-white/10 text-slate-500 cursor-not-allowed'
+                  }`}
               >
                 {loading ? (
                   <>
@@ -504,6 +587,38 @@ export default function PostGeneratorPage() {
                 {Array.isArray(postData.hashtags) && postData.hashtags.length > 0 && (
                   <p className="text-brand-light text-xs">{postData.hashtags.join(' ')}</p>
                 )}
+
+                <div className="pt-4 border-t border-white/10 mt-4">
+                  {linkedInPostUrl ? (
+                    <a
+                      href={linkedInPostUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition border border-emerald-500/30"
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Posted! View on LinkedIn →
+                    </a>
+                  ) : !isLinkedInConnected ? (
+                    <button
+                      onClick={() => window.location.href = "http://localhost:8080/auth/linkedin"}
+                      className="w-full py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 bg-[#0077b5] text-white hover:bg-[#006097] transition"
+                    >
+                      <Linkedin className="w-4 h-4" /> Connect LinkedIn
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handlePostToLinkedIn}
+                      disabled={postingToLinkedIn}
+                      className="w-full py-2.5 rounded-xl font-semibold flex items-center justify-center gap-2 bg-[#0077b5] text-white hover:bg-[#006097] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {postingToLinkedIn ? (
+                        <><Loader2 className="w-4 h-4 animate-spin" /> Posting...</>
+                      ) : (
+                        <><Linkedin className="w-4 h-4" /> Post to LinkedIn {linkedInName ? `as ${linkedInName}` : ''}</>
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>

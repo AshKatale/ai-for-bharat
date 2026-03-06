@@ -3,10 +3,10 @@ import axios from 'axios';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
-// ── Default axios instance (used everywhere via `import api from ...`) ──────
 const api = axios.create({
   baseURL: `${BASE_URL}/api`,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
 // Attach JWT token automatically
