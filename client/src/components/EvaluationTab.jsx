@@ -10,7 +10,7 @@ const SIMULATION_STEPS = [
     "Consolidating final responses..."
 ];
 
-function EvaluationTab({ questions, onBack }) {
+function EvaluationTab({ questions, onBack, onEvaluationComplete, onAnalyzeGeo }) {
     const [evalLoading, setEvalLoading] = useState(false);
     const [evalError, setEvalError] = useState('');
     const [evaluationResults, setEvaluationResults] = useState(null);
@@ -60,6 +60,9 @@ function EvaluationTab({ questions, onBack }) {
             const json = await res.json();
             if (json.success && json.data) {
                 setEvaluationResults(json.data);
+                if (onEvaluationComplete) {
+                    onEvaluationComplete(json.data);
+                }
             } else {
                 setEvalError(json.message || 'Evaluation failed.');
             }
@@ -332,6 +335,28 @@ function EvaluationTab({ questions, onBack }) {
                             </div>
                         );
                     })}
+                    
+                    {/* Run GEO Analysis CTA */}
+                    <div className="mt-12 flex justify-center">
+                        <button
+                            onClick={onAnalyzeGeo}
+                            className="group relative px-8 py-4 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 hover:from-cyan-500/20 hover:to-blue-500/20 border border-cyan-500/30 rounded-xl flex items-center gap-4 transition-all hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.2)] overflow-hidden"
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-400/10 to-cyan-400/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                            <div className="p-2.5 bg-cyan-500/20 rounded-lg">
+                                <svg className="w-6 h-6 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <div className="text-left">
+                                <h4 className="text-white font-bold text-lg leading-tight group-hover:text-cyan-300 transition-colors">Run GEO Analysis</h4>
+                                <p className="text-sm text-cyan-200/60 mt-0.5 font-medium">Synthesize these results into actionable visibility intelligence</p>
+                            </div>
+                            <svg className="w-6 h-6 text-cyan-400/50 group-hover:text-cyan-400 transform group-hover:translate-x-1 transition-all ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
