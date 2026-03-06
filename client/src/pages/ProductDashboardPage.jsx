@@ -5,6 +5,7 @@ import api from '../services/api';
 import Loader from '../components/Loader';
 import LiveSearchTab from '../components/LiveSearchTab';
 import EvaluationTab from '../components/EvaluationTab';
+import GeoAnalysisTab from '../components/GeoAnalysisTab';
 
 function ProductDashboardPage() {
   const { productId } = useParams();
@@ -13,6 +14,7 @@ function ProductDashboardPage() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState('overview');
   const [evaluationQuestions, setEvaluationQuestions] = useState([]);
+  const [evaluationResults, setEvaluationResults] = useState(null);
 
   const handleStartEvaluation = (questions) => {
     setEvaluationQuestions(questions);
@@ -113,7 +115,17 @@ function ProductDashboardPage() {
               >
                 Evaluation
                 {activeTab === 'evaluation' && (
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-light rounded-t-full" />
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-brand-light rounded-t-full" />
+                )}
+              </button>
+              <button
+                onClick={() => setActiveTab('geo-analysis')}
+                disabled={!evaluationResults}
+                className={`pb-3 text-sm font-medium transition-colors relative flex items-center gap-2 ${!evaluationResults ? 'text-slate-600 cursor-not-allowed hidden md:flex' : activeTab === 'geo-analysis' ? 'text-cyan-400' : 'text-slate-400 hover:text-slate-200'}`}
+              >
+                GEO Analysis
+                {activeTab === 'geo-analysis' && (
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-cyan-400 rounded-t-full shadow-[0_0_10px_rgba(34,211,238,0.5)]" />
                 )}
               </button>
             </div>
@@ -194,6 +206,19 @@ function ProductDashboardPage() {
                 <EvaluationTab
                   questions={evaluationQuestions}
                   onBack={() => setActiveTab('live-search')}
+                  onEvaluationComplete={(results) => {
+                    setEvaluationResults(results);
+                  }}
+                  onAnalyzeGeo={() => setActiveTab('geo-analysis')}
+                />
+              </div>
+            </div>
+
+            <div className={activeTab === 'geo-analysis' ? 'block animate-fade-in' : 'hidden'}>
+              <div className="glass-card p-6 md:p-8">
+                <GeoAnalysisTab 
+                  evaluationResults={evaluationResults}
+                  productName={product.name}
                 />
               </div>
             </div>
