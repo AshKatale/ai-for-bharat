@@ -9,7 +9,7 @@ const {
 } = require('../config/env');
 
 class DynamoDBService {
-  constructor(tableName = DYNAMODB_USERS_TABLE_NAME) {
+  constructor(tableName = DYNAMODB_USERS_TABLE_NAME, keySchema = null) {
     this.dynamodb = new AWS.DynamoDB({
       region: DYNAMODB_REGION,
       endpoint: DYNAMODB_ENDPOINT,
@@ -19,6 +19,8 @@ class DynamoDBService {
       endpoint: DYNAMODB_ENDPOINT,
     });
     this.tableName = tableName;
+    // keySchema: { partitionKey: { name: 'id', type: 'S' }, sortKey?: { name: 'sk', type: 'S' } }
+    this.keySchema = keySchema;
   }
 
   /**
@@ -177,14 +179,42 @@ class DynamoDBService {
    * @returns {Promise<Object>} Table creation result
    */
   async createTable() {
+    // Use custom key schema if provided, otherwise use default
+    const keySchema = [];
+    const attributeDefinitions = [];
+
+    if (this.keySchema) {
+      // Custom schema provided
+      if (this.keySchema.partitionKey) {
+        keySchema.push({
+          AttributeName: this.keySchema.partitionKey.name,
+          KeyType: 'HASH',
+        });
+        attributeDefinitions.push({
+          AttributeName: this.keySchema.partitionKey.name,
+          AttributeType: this.keySchema.partitionKey.type || 'S',
+        });
+      }
+      if (this.keySchema.sortKey) {
+        keySchema.push({
+          AttributeName: this.keySchema.sortKey.name,
+          KeyType: 'RANGE',
+        });
+        attributeDefinitions.push({
+          AttributeName: this.keySchema.sortKey.name,
+          AttributeType: this.keySchema.sortKey.type || 'S',
+        });
+      }
+    } else {
+      // Default schema with just 'id' as partition key
+      keySchema.push({ AttributeName: 'id', KeyType: 'HASH' });
+      attributeDefinitions.push({ AttributeName: 'id', AttributeType: 'S' });
+    }
+
     const params = {
       TableName: this.tableName,
-      KeySchema: [
-        { AttributeName: 'id', KeyType: 'HASH' }, // Partition key
-      ],
-      AttributeDefinitions: [
-        { AttributeName: 'id', AttributeType: 'S' },
-      ],
+      KeySchema: keySchema,
+      AttributeDefinitions: attributeDefinitions,
       BillingMode: 'PAY_PER_REQUEST', // On-demand billing
     };
 

@@ -2,11 +2,24 @@
 const logger = require('../utils/logger');
 const DynamoDBService = require('./dynamodbService');
 const lambdaService = require('./lambdaService');
-const { DYNAMODB_USERS_TABLE_NAME, DYNAMODB_PRODUCTS_TABLE_NAME } = require('../config/env');
+const { 
+  DYNAMODB_USERS_TABLE_NAME, 
+  DYNAMODB_PRODUCTS_TABLE_NAME,
+  DYNAMODB_GEO_SESSIONS_TABLE_NAME 
+} = require('../config/env');
 
-// Initialize DynamoDB services for both tables
+// Initialize DynamoDB services for all tables
 const usersDBService = new DynamoDBService(DYNAMODB_USERS_TABLE_NAME);
 const productsDBService = new DynamoDBService(DYNAMODB_PRODUCTS_TABLE_NAME);
+
+// GEO Analysis Sessions table with composite key: product_id (HASH) + session_id (RANGE)
+const geoDBService = new DynamoDBService(
+  DYNAMODB_GEO_SESSIONS_TABLE_NAME,
+  {
+    partitionKey: { name: 'product_id', type: 'S' },
+    sortKey: { name: 'session_id', type: 'S' },
+  }
+);
 
 /**
  * Initialize AWS services
@@ -27,6 +40,12 @@ async function initializeAWSServices() {
     const productsTableResult = await productsDBService.createTable();
     if (productsTableResult.success) {
       logger.info('DynamoDB Products table initialized successfully');
+    }
+
+    logger.info('Setting up DynamoDB GEO Analysis Sessions table...');
+    const geoTableResult = await geoDBService.createTable();
+    if (geoTableResult.success) {
+      logger.info('DynamoDB GEO Analysis Sessions table initialized successfully');
     }
 
     // Verify Lambda connectivity
@@ -87,5 +106,6 @@ module.exports = {
   testAWSConnectivity,
   usersDBService,
   productsDBService,
+  geoDBService,
   lambdaService,
 };

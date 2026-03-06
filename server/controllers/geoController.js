@@ -251,3 +251,328 @@ exports.analyzeGeoResults = async (req, res, next) => {
     next(err);
   }
 };
+
+/**
+ * POST /api/geo/session
+ *
+ * Store a new GEO analysis session in DynamoDB
+ *
+ * Request body:
+ * {
+ *   product_name: string,
+ *   competitors?: string[],
+ *   vectorCollection?: string,
+ *   models_used?: string[],
+ *   results?: [{ question_number, question, model_answers... }],
+ *   analysis_results?: object
+ * }
+ */
+exports.createSession = async (req, res, next) => {
+  try {
+    const {
+      product_name,
+      competitors,
+      vectorCollection,
+      models_used,
+      results,
+      analysis_results,
+    } = req.body;
+
+    if (!product_name || typeof product_name !== 'string') {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'product_name (string) is required.',
+      });
+    }
+
+    logger.info(`Creating GEO analysis session for product: ${product_name}`);
+
+    const GEOAnalysisService = require('../services/geoAnalysisService');
+    const geoService = new GEOAnalysisService();
+
+    const sessionResult = await geoService.createSession({
+      product_name,
+      competitors,
+      vectorCollection,
+      models_used,
+      results,
+      analysis_results,
+    });
+
+    return res.status(201).json(sessionResult);
+  } catch (error) {
+    logger.error(`Error creating GEO analysis session: ${error.message}`);
+    next(error);
+  }
+};
+
+/**
+ * GET /api/geo/sessions/:product_id
+ *
+ * Fetch all analysis sessions for a product
+ */
+exports.getProductSessions = async (req, res, next) => {
+  try {
+    const { product_id } = req.params;
+
+    if (!product_id) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'product_id is required.',
+      });
+    }
+
+    logger.info(`Fetching GEO sessions for product: ${product_id}`);
+
+    const GEOAnalysisService = require('../services/geoAnalysisService');
+    const geoService = new GEOAnalysisService();
+
+    const result = await geoService.getProductSessions(product_id);
+
+    return res.status(OK).json({
+      success: result.success,
+      data: result.data,
+      count: result.data ? result.data.length : 0,
+    });
+  } catch (error) {
+    logger.error(`Error fetching product sessions: ${error.message}`);
+    next(error);
+  }
+};
+
+/**
+ * GET /api/geo/session/:product_id/:session_id
+ *
+ * Fetch full details of a specific GEO analysis session
+ */
+exports.getSessionDetails = async (req, res, next) => {
+  try {
+    const { product_id, session_id } = req.params;
+
+    if (!product_id || !session_id) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'product_id and session_id are required.',
+      });
+    }
+
+    logger.info(`Fetching GEO session details: ${product_id} / ${session_id}`);
+
+    const GEOAnalysisService = require('../services/geoAnalysisService');
+    const geoService = new GEOAnalysisService();
+
+    const result = await geoService.getSessionDetails(product_id, session_id);
+
+    if (!result.success) {
+      return res.status(404).json({
+        success: false,
+        message: 'Session not found.',
+      });
+    }
+
+    return res.status(OK).json({
+      success: result.success,
+      data: result.data,
+    });
+  } catch (error) {
+    logger.error(`Error fetching session details: ${error.message}`);
+    next(error);
+  }
+};
+
+/**
+ * POST /api/geo/session/:product_id/:session_id/questions
+ *
+ * Add or update questions in an existing session
+ */
+exports.addQuestionsToSession = async (req, res, next) => {
+  try {
+    const { product_id, session_id } = req.params;
+    const { questions } = req.body;
+
+    if (!product_id || !session_id) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'product_id and session_id are required.',
+      });
+    }
+
+    if (!Array.isArray(questions) || questions.length === 0) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'questions must be a non-empty array with format: [{question_number, question}, ...]',
+      });
+    }
+
+    logger.info(`Adding questions to session: ${product_id} / ${session_id}`);
+
+    const GEOAnalysisService = require('../services/geoAnalysisService');
+    const geoService = new GEOAnalysisService();
+
+    const result = await geoService.addQuestionsToSession(product_id, session_id, questions);
+
+    return res.status(OK).json({
+      success: result.success,
+      message: 'Questions added/updated successfully',
+      data: {
+        product_id: result.data.product_id,
+        session_id: result.data.session_id,
+        total_questions: result.data.questions.length,
+        questions: result.data.questions,
+      },
+    });
+  } catch (error) {
+    logger.error(`Error adding questions: ${error.message}`);
+    next(error);
+  }
+};
+
+/**
+ * POST /api/geo/session/:product_id/:session_id/answers
+ *
+ * Add or update answers for questions in an existing session
+ */
+exports.addAnswersToSession = async (req, res, next) => {
+  try {
+    const { product_id, session_id } = req.params;
+    const { answers } = req.body;
+
+    if (!product_id || !session_id) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'product_id and session_id are required.',
+      });
+    }
+
+    if (!Array.isArray(answers) || answers.length === 0) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'answers must be a non-empty array with format: [{question_number, model_name: answer, ...}, ...]',
+      });
+    }
+
+    logger.info(`Adding answers to session: ${product_id} / ${session_id}`);
+
+    const GEOAnalysisService = require('../services/geoAnalysisService');
+    const geoService = new GEOAnalysisService();
+
+    const result = await geoService.addAnswersToSession(product_id, session_id, answers);
+
+    return res.status(OK).json({
+      success: result.success,
+      message: 'Answers added/updated successfully',
+      data: {
+        product_id: result.data.product_id,
+        session_id: result.data.session_id,
+        total_answers: result.data.answers.length,
+        answers: result.data.answers,
+      },
+    });
+  } catch (error) {
+    logger.error(`Error adding answers: ${error.message}`);
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/geo/session/:product_id/:session_id/models
+ *
+ * Update models_used list for a session
+ */
+exports.updateModelsUsed = async (req, res, next) => {
+  try {
+    const { product_id, session_id } = req.params;
+    const { models } = req.body;
+
+    if (!product_id || !session_id) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'product_id and session_id are required.',
+      });
+    }
+
+    if (!Array.isArray(models) || models.length === 0) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'models must be a non-empty array of model names.',
+      });
+    }
+
+    logger.info(`Updating models used for session: ${product_id} / ${session_id}`);
+
+    const GEOAnalysisService = require('../services/geoAnalysisService');
+    const geoService = new GEOAnalysisService();
+
+    const result = await geoService.updateModelsUsed(product_id, session_id, models);
+
+    return res.status(OK).json({
+      success: result.success,
+      message: 'Models updated successfully',
+      data: {
+        product_id: result.data.product_id,
+        session_id: result.data.session_id,
+        models_used: result.data.models_used,
+      },
+    });
+  } catch (error) {
+    logger.error(`Error updating models: ${error.message}`);
+    next(error);
+  }
+};
+
+/**
+ * PATCH /api/geo/session/:product_id/:session_id/metadata
+ *
+ * Update session metadata (product_name, competitors, vectorCollection)
+ */
+exports.updateSessionMetadata = async (req, res, next) => {
+  try {
+    const { product_id, session_id } = req.params;
+    const { product_name, competitors, vectorCollection } = req.body;
+
+    if (!product_id || !session_id) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'product_id and session_id are required.',
+      });
+    }
+
+    const metadata = {};
+    if (product_name) metadata.product_name = product_name;
+    if (competitors) metadata.competitors = competitors;
+    if (vectorCollection) metadata.vectorCollection = vectorCollection;
+
+    if (Object.keys(metadata).length === 0) {
+      return res.status(BAD_REQUEST).json({
+        success: false,
+        message: 'At least one field (product_name, competitors, vectorCollection) is required.',
+      });
+    }
+
+    logger.info(`Updating session metadata: ${product_id} / ${session_id}`);
+
+    const GEOAnalysisService = require('../services/geoAnalysisService');
+    const geoService = new GEOAnalysisService();
+
+    const result = await geoService.updateSessionMetadata(product_id, session_id, metadata);
+
+    if (!result.success) {
+      return res.status(BAD_REQUEST).json(result);
+    }
+
+    return res.status(OK).json({
+      success: result.success,
+      message: 'Session metadata updated successfully',
+      data: {
+        product_id: result.data.product_id,
+        session_id: result.data.session_id,
+        product_name: result.data.product_name,
+        competitors: result.data.competitors,
+        vectorCollection: result.data.vectorCollection,
+      },
+    });
+  } catch (error) {
+    logger.error(`Error updating session metadata: ${error.message}`);
+    next(error);
+  }
+};

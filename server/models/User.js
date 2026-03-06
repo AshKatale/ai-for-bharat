@@ -24,7 +24,6 @@ const dynamodbService = new DynamoDBService(DYNAMODB_USERS_TABLE_NAME);
  * @property {string} location - User's location
  * @property {string} website - User's website URL
  * @property {Array<string>} products - Array of owned product IDs (foreign keys)
- * @property {Array<string>} skills - Array of user skills/tags
  * @property {Object} socialLinks - Social media links
  * @property {string} socialLinks.twitter - Twitter profile URL
  * @property {string} socialLinks.linkedin - LinkedIn profile URL
@@ -77,7 +76,6 @@ class User {
         location: userData.location || '',
         website: userData.website || '',
         products: userData.products || [], // Array of product IDs owned by user
-        skills: userData.skills || [],
         socialLinks: {
           twitter: userData.socialLinks?.twitter || '',
           linkedin: userData.socialLinks?.linkedin || '',
