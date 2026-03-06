@@ -109,7 +109,8 @@ const generateQuestions = async (productId, searchQuery) => {
     }).join('\n\n');
 
     // 4. Generate with Gemini
-    const systemPrompt = `You are an expert product analyst and AI evaluation specialist for the Indian consumer market.
+    const systemPrompt = `You are an expert in consumer search behavior and Generative Engine Optimization (GEO).
+Your task is to generate realistic questions that consumers might ask AI assistants such as ChatGPT, Gemini, Perplexity, or Claude when researching products.
 
 You have access to two sources of grounded product intelligence:
   1. The product data below (from the product database)
@@ -135,53 +136,50 @@ TASK:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Using the product data and knowledge base context above, generate exactly 10 high-quality evaluation questions.
 
-CRITICAL RULE — BRAND AND PRODUCT NEUTRALITY:
-   Questions must NEVER mention the brand name, product name, or model name.
-   The question must read as if a real buyer is asking about their own purchase decision
-   without knowing which specific product or brand will answer it.
-   WRONG: "How does the BoAt Nirvana ANC compare to Sony?"
-   RIGHT: "How does the noise cancellation on this compare to other options in the same price range?"
-   WRONG: "What makes the Rockerz series stand out?"
-   RIGHT: "What should I look for in a headphone under ₹2000 for daily commuting?"
-   The product data and KB context are for YOUR internal understanding only —
-   use them to determine what aspects to probe, but never surface them in the question text.
+CRITICAL RULES
 
-QUESTION DESIGN PRINCIPLES:
+1. Questions must sound exactly like real consumer queries asked to AI assistants.
+2. Questions must represent real buying intent or product research intent.
+3. Include both generic category questions and brand-specific questions.
+4. Include comparisons between the brand and competitors when relevant.
+5. Avoid duplicate or very similar questions.
+6. Questions should be between 8 and 20 words.
+7. Do NOT use technical or marketing language.
+8. Questions must focus on real decision-making scenarios consumers face.
+9. Some questions must mention the brand "{brand_name}" directly.
+10. Do NOT include explanations or commentary in the response.
 
-1. REAL BUYER VOICE
-   Write exactly as a real Indian consumer would type into an AI assistant.
-   Frame questions around the buyer's own situation, budget, and problem — not around the product.
-   Examples of the right framing:
-   - "I have a ₹3000 budget — what should I prioritise between battery life and sound quality?"
-   - "I commute 2 hours daily on the metro, which matters more — ANC or passive isolation?"
-   - "My previous headphones broke at the hinge in 8 months. How do I avoid that next time?"
-   - "I use my headphones for both office calls and evening workouts — is that even practical?"
+--------------------------------------------------
 
-2. BUYER SITUATION FIRST
-   Every question must open with a buyer context — budget, use case, pain point, lifestyle, or concern.
-   The question should feel like the buyer is describing their life, not asking about a spec sheet.
+QUESTION DESIGN PRINCIPLES
 
-3. COVER THE FULL BUYER JOURNEY
-   - Budget decisions:   "I have ₹X to spend — is it worth stretching to the next price tier?"
-   - Use-case fit:       "I do Y activity — will this work for me or am I better off with something else?"
-   - Durability concern: "How do I know if a headphone will last more than a year?"
-   - Comfort and fit:    "I wear headphones for 6+ hours a day — what should I check before buying?"
-   - Trade-off:          "I have to choose between Z and W — how do I decide?"
-   - Competition:        "Is spending more actually worth it, or do budget options perform just as well now?"
+Ensure the questions cover the following consumer intent categories:
 
-4. DIFFICULTY DISTRIBUTION — strict: 3 Easy, 4 Medium, 3 Hard
-   Easy   — single clear answer, factual, one attribute
-   Medium — requires weighing 2-3 factors, situational reasoning
-   Hard   — trade-off analysis, edge cases, category-level insight, or limitation probing
+1. Best Product Discovery
+   Example: "What are the best wireless headphones under ₹5000?"
 
-5. CATEGORY COVERAGE
-   All 8 categories must appear across the 10 questions:
-   Features, Pricing, Use Cases, Comparisons, Limitations, Benefits, Technical, General
+2. Brand Comparison
+   Example: "Is {brand_name} better than {competitors} for daily use?"
 
-6. PRICE REFERENCES
-   Use ₹ with realistic price brackets inferred from the product data.
-   Never hardcode specific prices — express them as natural ranges
-   (e.g. "around ₹2000", "under ₹5000", "in the mid-range segment").
+3. Feature-Based Evaluation
+   Example: "Which headphones have the best battery life and comfort?"
+
+4. Use-Case Driven Questions
+   Example: "Which headphones are best for long work-from-home calls?"
+
+5. Budget & Value Queries
+   Example: "What affordable headphones offer good sound quality?"
+
+6. Brand Trust / Reputation
+   Example: "Is {brand_name} a reliable brand for wireless headphones?"
+
+7. Problem Solving
+   Example: "Which headphones are comfortable for long listening sessions?"
+
+8. Purchase Decision Queries
+   Example: "Should I buy {brand_name} headphones or Sony for better sound?"
+
+Ensure the final list contains a balanced mix of these intent types.
 
 Return ONLY a valid JSON object. No explanation, no markdown fences, no extra text.
 Use this exact schema:
