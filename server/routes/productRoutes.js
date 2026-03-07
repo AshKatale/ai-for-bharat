@@ -10,6 +10,9 @@ const router = express.Router();
 router.get('/', productController.getAllProducts);
 router.get('/search', productController.searchProducts);
 
+// Global Stats
+router.get('/global-stats', productController.getGlobalStats);
+
 // Real SSE streaming search — must be before /:id
 router.get('/search/stream', searchStream);
 

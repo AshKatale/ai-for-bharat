@@ -112,8 +112,7 @@ function LandingPage() {
           <span className="gradient-text">Built for Bharat</span>
         </h1>
         <p className="text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed animate-fade-in">
-          Search, explore, and showcase AI tools built by Indian developers — with live transparency
-          showing you every step taken behind the scenes.
+          Discover, showcase, and supercharge AI products built by Indian developers. Leverage built-in tools for geo-analysis, automated ad creatives, and actionable insights.
         </p>
         <div className="flex items-center justify-center gap-3 flex-wrap">
           <Link to="/signup">

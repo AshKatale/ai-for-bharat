@@ -21,6 +21,36 @@ exports.getAllProducts = async (req, res, next) => {
   }
 };
 
+// Get global stats
+exports.getGlobalStats = async (req, res, next) => {
+  try {
+    const products = await Product.findAll();
+    const users = await User.findAll();
+
+    const totalProducts = products.length;
+    const activeListings = products.filter(p => p.status === 'active').length;
+    const totalAccounts = users.length;
+
+    // Get the actual accumulated views and downloads from the DB
+    const realViews = products.reduce((s, p) => s + (p.stats?.views || 0), 0);
+    const realDownloads = products.reduce((s, p) => s + (p.stats?.downloads || 0), 0);
+
+    res.status(OK).json({
+      success: true,
+      message: SUCCESS,
+      data: {
+        totalProducts,
+        activeListings,
+        totalViews: realViews,
+        totalDownloads: realDownloads,
+        totalAccounts,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Get product by ID
 exports.getProductById = async (req, res, next) => {
   try {

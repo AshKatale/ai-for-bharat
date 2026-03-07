@@ -20,12 +20,24 @@ function StatCard({ label, value, gradient, icon }) {
 
 function OverviewPage() {
   const [products, setProducts] = useState([]);
+  const [globalStats, setGlobalStats] = useState({
+    totalProducts: 0,
+    activeListings: 0,
+    totalViews: 0,
+    totalDownloads: 0,
+  });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
     
+    // Fetch global stats for the top cards
+    api.get('/products/global-stats')
+      .then(({ data }) => setGlobalStats(data?.data || {}))
+      .catch((err) => console.error('Error fetching global stats:', err));
+
+    // Fetch user-specific products for the "Recent Products" section
     if (user?.id) {
       api.get(`/products/user/${user.id}`)
         .then(({ data }) => setProducts(data?.data || data || []))
@@ -40,7 +52,7 @@ function OverviewPage() {
   const stats = [
     {
       label: 'Total Products',
-      value: products.length,
+      value: products.length || 0,
       gradient: 'from-green-500/15 to-green-600/5',
       icon: (
         <svg className="w-5 h-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -51,7 +63,7 @@ function OverviewPage() {
     },
     {
       label: 'Active Listings',
-      value: products.filter(p => p.status === 'active').length,
+      value: globalStats.activeListings || 0,
       gradient: 'from-emerald-500/15 to-emerald-600/5',
       icon: (
         <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -62,7 +74,7 @@ function OverviewPage() {
     },
     {
       label: 'Total Views',
-      value: products.reduce((s, p) => s + (p.stats?.views || 0), 0),
+      value: globalStats.totalViews || 0,
       gradient: 'from-emerald-500/15 to-emerald-600/5',
       icon: (
         <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,7 +87,7 @@ function OverviewPage() {
     },
     {
       label: 'Total Downloads',
-      value: products.reduce((s, p) => s + (p.stats?.downloads || 0), 0),
+      value: globalStats.totalDownloads || 0,
       gradient: 'from-lime-500/15 to-lime-600/5',
       icon: (
         <svg className="w-5 h-5 text-lime-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
