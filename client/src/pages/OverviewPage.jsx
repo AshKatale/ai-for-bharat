@@ -1,5 +1,5 @@
 // OverviewPage.jsx — No emojis version
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 import Loader from '../components/Loader';
 import { Link } from 'react-router-dom';
@@ -21,8 +21,11 @@ function StatCard({ label, value, gradient, icon }) {
 function OverviewPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
     const userString = localStorage.getItem('user');
     const user = userString ? JSON.parse(userString) : null;
     

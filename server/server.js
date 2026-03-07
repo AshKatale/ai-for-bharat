@@ -35,6 +35,7 @@ app.use('/api/questions',questionRoutes);
 app.use('/api/evaluate', evaluationRoutes);
 app.use('/api/aws',      require('./routes/awsRoutes'));
 app.use('/api/sentiment',require('./routes/sentimentRoutes'));
+app.use('/api/interact', require('./routes/interactRoutes'));
 
 
 // Health check endpoint
