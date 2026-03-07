@@ -34,7 +34,7 @@ const SECTIONS = [
     { id: 'video', label: 'Video Settings', icon: Settings2 },
 ];
 
-const VIDEO_AD_API = 'http://localhost:8080/api/products/generate-video';
+const VIDEO_AD_API = `${process.env.VITE_BACKEND_URI}/api/products/generate-video`;
 
 // ─── Sub-components ───────────────────────────────────────────
 

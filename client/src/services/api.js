@@ -1,7 +1,7 @@
 // services/api.js — Axios instance for backend
 import axios from 'axios';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+const BASE_URL = import.meta.env.VITE_BACKEND_URI || 'http://localhost:8080';
 
 // ── Default axios instance (used everywhere via `import api from ...`) ──────
 const api = axios.create({

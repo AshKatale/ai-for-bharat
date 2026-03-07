@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-const QUESTIONS_API = 'http://localhost:8080';
+const QUESTIONS_API = process.env.VITE_BACKEND_URI;
 
 const Q_STEPS = [
     { label: 'Receiving search query', icon: '' },
