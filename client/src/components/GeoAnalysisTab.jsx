@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const API_BASE = 'http://localhost:8080/api';
 
@@ -16,6 +16,7 @@ function GeoAnalysisTab({ evaluationResults, productName }) {
     const [analysisData, setAnalysisData] = useState(null);
     const [simStep, setSimStep] = useState(0);
     const [expandedStates, setExpandedStates] = useState({});
+    const analyzedSigRef = useRef(null);
 
     const toggleExpand = (index) => {
         setExpandedStates(prev => ({
@@ -26,7 +27,11 @@ function GeoAnalysisTab({ evaluationResults, productName }) {
 
     useEffect(() => {
         if (evaluationResults && evaluationResults.results?.length > 0) {
-            runGeoAnalysis(evaluationResults.results);
+            const sig = evaluationResults.results.map(r => r.question_number).join('|');
+            if (sig !== analyzedSigRef.current) {
+                analyzedSigRef.current = sig;
+                runGeoAnalysis(evaluationResults.results);
+            }
         }
     }, [evaluationResults]);
 

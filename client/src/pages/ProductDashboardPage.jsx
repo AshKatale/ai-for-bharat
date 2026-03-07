@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import api from '../services/api';
@@ -25,6 +25,7 @@ function ProductDashboardPage() {
   const [settingsForm, setSettingsForm] = useState({});
   const [settingsSaving, setSettingsSaving] = useState(false);
   const [settingsMsg, setSettingsMsg] = useState({ type: '', text: '' });
+  const fetchedProductIdRef = useRef(null);
 
   const handleStartEvaluation = (questions) => {
     setEvaluationQuestions(questions);
@@ -32,6 +33,8 @@ function ProductDashboardPage() {
   };
 
   useEffect(() => {
+    if (!productId || productId === fetchedProductIdRef.current) return;
+    fetchedProductIdRef.current = productId;
     const fetchProduct = async () => {
       try {
         setLoading(true);
@@ -55,7 +58,7 @@ function ProductDashboardPage() {
         setLoading(false);
       }
     };
-    if (productId) fetchProduct();
+    fetchProduct();
   }, [productId]);
 
   const handleSettingsSave = async (e) => {
@@ -164,16 +167,18 @@ function ProductDashboardPage() {
               </div>
             </div>
 
-            <div className={activeTab === 'evaluation' ? 'block animate-fade-in' : 'hidden'}>
-              <div className="glass-card p-6 md:p-8">
-                <EvaluationTab
-                  questions={evaluationQuestions}
-                  onBack={() => setActiveTab('live-search')}
-                  onEvaluationComplete={(results) => { setEvaluationResults(results); }}
-                  onAnalyzeGeo={() => { setActiveTab('geo-analysis'); setGeoSubTab('geo-result'); }}
-                />
+            {activeTab === 'evaluation' && (
+              <div className="animate-fade-in">
+                <div className="glass-card p-6 md:p-8">
+                  <EvaluationTab
+                    questions={evaluationQuestions}
+                    onBack={() => setActiveTab('live-search')}
+                    onEvaluationComplete={(results) => { setEvaluationResults(results); }}
+                    onAnalyzeGeo={() => { setActiveTab('geo-analysis'); setGeoSubTab('geo-result'); }}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
         ) : (

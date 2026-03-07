@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const QUESTIONS_API = 'http://localhost:8080';
 
@@ -19,6 +19,7 @@ function EvaluationTab({ questions, onBack, onEvaluationComplete, onAnalyzeGeo }
     // tracks which question index is expanded
     // key format: "qIndex"
     const [expandedStates, setExpandedStates] = useState({});
+    const evaluatedSigRef = useRef(null);
 
     const toggleExpand = (qIndex) => {
         setExpandedStates(prev => ({
@@ -29,7 +30,11 @@ function EvaluationTab({ questions, onBack, onEvaluationComplete, onAnalyzeGeo }
 
     useEffect(() => {
         if (questions && questions.length > 0) {
-            runEvaluation(questions);
+            const sig = questions.map(q => q.question).join('|');
+            if (sig !== evaluatedSigRef.current) {
+                evaluatedSigRef.current = sig;
+                runEvaluation(questions);
+            }
         }
     }, [questions]);
 
