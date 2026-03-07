@@ -23,10 +23,18 @@ function OverviewPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get('/products')
-      .then(({ data }) => setProducts(data?.data || data || []))
-      .catch(() => setProducts([]))
-      .finally(() => setLoading(false));
+    const userString = localStorage.getItem('user');
+    const user = userString ? JSON.parse(userString) : null;
+    
+    if (user?.id) {
+      api.get(`/products/user/${user.id}`)
+        .then(({ data }) => setProducts(data?.data || data || []))
+        .catch(() => setProducts([]))
+        .finally(() => setLoading(false));
+    } else {
+      setProducts([]);
+      setLoading(false);
+    }
   }, []);
 
   const stats = [
