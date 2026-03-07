@@ -74,13 +74,6 @@ function LiveSearchTab({ productId, productName, onStartEvaluation }) {
         return () => clearInterval(qTimerRef.current);
     }, [qLoading, qDone]);
 
-    useEffect(() => {
-        if (productId && !qDone && !qLoading && !qError) {
-            generateQuestions(productName || 'product', productId);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [productId, productName]);
-
     const generateQuestions = async (q, pid) => {
         setQLoading(true);
         setQError('');
