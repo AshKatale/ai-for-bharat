@@ -139,7 +139,7 @@ function Toast({ type, message }) {
   );
 }
 
-export default function PostGeneratorPage() {
+export default function PostGeneratorPage({ productId: productIdProp }) {
   const [loading, setLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [result, setResult] = useState(null);
@@ -147,8 +147,10 @@ export default function PostGeneratorPage() {
   const [previewVideo, setPreviewVideo] = useState(null);
   const [videoLoadError, setVideoLoadError] = useState(false);
 
+  const resolvedProductId = productIdProp || localStorage.getItem('selectedProductId') || '';
+
   const [form, setForm] = useState({
-    productId: '',
+    productId: resolvedProductId,
     brand_name: '',
     post_language: 'english',
     tone: 'energetic',
@@ -260,16 +262,6 @@ export default function PostGeneratorPage() {
       <div className="grid lg:grid-cols-5 gap-6 items-start">
         <div className="lg:col-span-3 space-y-4">
           <div className="glass-card p-4 grid md:grid-cols-2 gap-4">
-            <div className="md:col-span-2">
-              <Label required>Product ID</Label>
-              <input
-                className="input-field"
-                value={form.productId}
-                onChange={(e) => setValue('productId', e.target.value)}
-                placeholder="product-xxxxxxxxx"
-              />
-            </div>
-
             <div>
               <Label required>Brand Name</Label>
               <input

@@ -461,7 +461,7 @@ function ProductDashboardPage() {
       )}
       {activeTab === 'post-generator' && (
         <div className="pt-24 pb-10 px-4 md:px-8">
-          <PostGeneratorPage />
+          <PostGeneratorPage productId={productId} />
         </div>
       )}
       </div>

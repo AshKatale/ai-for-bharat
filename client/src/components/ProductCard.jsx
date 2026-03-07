@@ -39,9 +39,15 @@ function ProductCard({ product, index = 0 }) {
         technologies = [],
     } = product;
 
+    const handleClick = () => {
+        const id = product.productId || product.id;
+        localStorage.setItem('selectedProductId', id);
+        navigate(`/products/${id}/dashboard`);
+    };
+
     return (
         <div
-            onClick={() => navigate(`/products/${product.productId || product.id}/dashboard`)}
+            onClick={handleClick}
             className="glass-card flex flex-col h-full hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] transition-shadow duration-300 animate-fade-slide relative overflow-hidden group cursor-pointer"
             style={{ animationDelay: `${index * 0.07}s`, animationFillMode: 'both' }}
         >
