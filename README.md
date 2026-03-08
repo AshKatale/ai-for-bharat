@@ -1,216 +1,187 @@
-[![Gemini_Generated_Image_lhsu6clhsu6clhsu.png](https://i.postimg.cc/5NqHB8nR/Gemini_Generated_Image_lhsu6clhsu6clhsu.png)](https://postimg.cc/BXbQsPWT)
+[![Geonix Poster](https://i.postimg.cc/5NqHB8nR/Gemini_Generated_Image_lhsu6clhsu6clhsu.png)](https://postimg.cc/BXbQsPWT)
 
-# AI for Bharat — AI Discoverability Optimization Platform
-A full-stack platform to help products/brands improve **visibility in AI answers** using:
-- GEO (Generative Engine Optimisation) analysis
-- Question generation + multi-model evaluation
-- Market sentiment & competitor intelligence
-- Content generators (image/video ads, social posts)
-- Product directory + dashboards
+# Geonix — Generative Engine Optimization (GEO) & Marketing Platform  
+**Team:** Tech Avinya  
 
-## Monorepo Structure
+> **THE FUTURE OF DISCOVERY IS AI ANSWERS, NOT SEARCH ENGINES.**  
+Businesses lack visibility and control over how their products appear in AI‑generated answers, making traditional marketing ineffective in the AI-driven discovery era.
 
-```txt
-client/     # React (Vite) frontend
-server/     # Node.js (Express) API
-vector-db/  # Vector DB service (used by GEO pipeline)
-services/   # Supporting services (varies by feature)
-```
-
-## Tech Stack
-
-**Frontend**
-- React + Vite
-- TailwindCSS
-- React Router
-- Axios
-- Recharts, Framer Motion
-
-**Backend**
-- Node.js + Express
-- JWT auth + bcrypt password hashing
-- AWS SDK (DynamoDB, Lambda)
-- DataStax Astra DB SDK
-- Google GenAI (Gemini)
-- Tavily (for sentiment document retrieval)
-- Optional: local Vector DB service (for GEO context)
+Geonix is an end‑to‑end **Generative Engine Optimization (GEO)** + **GenAI Marketing** platform designed to help brands:
+- **Measure** how LLMs recommend them vs competitors (Share of Voice / Share of Answer)
+- **Identify** “data voids” where competitors win AI mindshare
+- **Generate** campaign assets (text, posters, 4K reels) to improve discoverability in AI answers
 
 ---
 
-## Getting Started (Local Development)
+## Links
+- **Live Project:** `www.geonix.live`  
+- **GitHub Repo:** `https://github.com/AshKatale/ai-for-bharat`  
+- **Demo Video (≤ 3 mins):** `https://www.youtube.com/watch?v=G9nuxN81Md4`
 
-### 1) Prerequisites
-- Node.js 18+ (recommended)
+---
+
+## Problem Statement
+Businesses lack visibility and control over how their products appear in AI-generated answers, making traditional marketing ineffective in the AI-driven discovery era.
+
+---
+
+## What Geonix Offers
+
+### 1) AI Presence Analytics (GEO Benchmarking)
+- Cross‑model benchmarking (GPT / Claude / Nova / Gemini)
+- Share‑of‑Voice insights across AI answers
+- Competitor outranking signals (where & why they appear above you)
+
+### 2) Strategy & Optimization
+- Data-driven suggestions to fix gaps in product context and knowledge signals
+- Recommendations to close “data voids” that reduce AI discoverability
+
+### 3) Multi‑Modal Generation & Deployment
+- Social copy + poster creatives + **4K video reels**
+- Automated workflows to create and reuse campaign assets efficiently
+
+---
+
+## Why AI is Needed (in this solution)
+- **Semantic intent understanding** for context-aware responses
+- **RAG grounding** via vector retrieval to reduce hallucinations and keep outputs factual
+- **Multi‑modal generation** (text + image + video) from a single brief at scale
+- **Cross‑model evaluation** to measure real AI “share of answer” rather than guessing
+
+---
+
+## Architecture
+### Proposed Solution Architecture
+[![Technical-architecture.png](https://i.postimg.cc/d1YRQJ1d/Technical-architecture.png)](https://postimg.cc/sBTGwd5D)
+
+---
+
+## Technologies Used
+
+| Category | Technologies |
+|---|---|
+| **Frontend** | React.js, Vite, Tailwind CSS |
+| **Backend** | Node.js (Express), AWS Lambda, API Gateway, EC2 |
+| **AI / GenAI** | Amazon Bedrock Runtime, Nova Pro, Nova Reel, Nova Canvas, Bedrock Knowledge Base (RAG) via `bedrock-agent-runtime` |
+| **Intelligence** | OpenSearch Serverless (Vector DB), RAG retrieval, Tavily Search API |
+| **Storage** | DynamoDB, Amazon S3 |
+
+---
+
+# Developer / Codebase Guide
+
+## Repo Structure
+```txt
+client/                # React (Vite) frontend
+server/                # Node.js (Express) backend API
+services/              # supporting services (AI workflows, intelligence modules)
+vector-db/             # vector retrieval service used by GEO pipeline
+```
+
+## Key Entry Points
+
+### Frontend
+- `client/src/main.jsx` — React bootstrap
+- `client/src/App.jsx` — root component
+- `client/src/routes/AppRoutes.jsx` — route map (landing, auth, dashboard, generators)
+
+### Backend
+- `server/server.js` — Express server entry, mounts all `/api/*` routes
+- `server/config/env.js` — central env config (AWS, DynamoDB tables, Vector DB, Astra, etc.)
+- `server/.env.example` — environment variable template
+
+---
+
+## Local Setup
+
+### Prerequisites
+- Node.js 18+
 - npm
-- (Optional) AWS credentials (for DynamoDB/Lambda)
-- (Optional) Vector DB service running (default `http://localhost:8081`)
-- (Optional) Tavily API key (for sentiment feature)
 
-### 2) Install Dependencies
+### 1) Install dependencies
 
-#### Frontend
+**Frontend**
 ```bash
 cd client
 npm install
 ```
 
-#### Backend
+**Backend**
 ```bash
 cd server
 npm install
 ```
 
-### 3) Configure Environment Variables (Backend)
-
-Copy the example env:
+### 2) Configure environment variables (Backend)
 ```bash
 cd server
 cp .env.example .env
 ```
 
-Update values as needed.
+Minimum recommended config:
+- `PORT`, `NODE_ENV`, `JWT_SECRET`
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION` (if using AWS-backed flows)
+- `TAVILY_API_KEY` (for sentiment intelligence)
+- `VECTOR_DB_URL` (for GEO context grounding), defaults to `http://localhost:8081`
 
-**Important envs used by the server**
-- `PORT` (default: 5000)
-- `NODE_ENV` (default: development)
-- `JWT_SECRET` (default fallback exists, but set your own)
-- **AWS**
-  - `AWS_REGION` (default: ap-south-1)
-  - `AWS_ACCESS_KEY_ID`
-  - `AWS_SECRET_ACCESS_KEY`
-  - `DYNAMODB_*_TABLE_NAME` (Users, Products, GEOAnalysisSessions)
-- **Vector DB**
-  - `VECTOR_DB_URL` (default: `http://localhost:8081`)
-  - `VECTOR_DB_COLLECTION` (default: `productsdetails`)
-  - `VECTOR_CONTEXT_LIMIT` (default: 8)
-- **AstraDB** (if used by your deployment)
-  - `ASTRA_DB_TOKEN`
-  - `ASTRA_DB_ENDPOINT`
-  - `ASTRA_DB_KEYSPACE`
-- **Sentiment Intelligence**
-  - `TAVILY_API_KEY`
-  - `SENTIMENT_CACHE_TTL_SECONDS`
-  - `SENTIMENT_TIMEOUT_MS`
-  - `OPENAI_API_KEY` (optional depending on pipeline)
+### 3) Run in development
 
-### 4) Run the Apps
-
-#### Start backend
+**Backend**
 ```bash
 cd server
 npm run dev
 ```
 
-Backend should start on:
-- `http://localhost:5000`
-
-Health check:
-- `GET /api/health`
-
-#### Start frontend
+**Frontend**
 ```bash
 cd client
 npm run dev
 ```
 
-Frontend dev server is typically:
-- `http://localhost:5173`
-
 ---
 
-## Core API Routes (Backend)
-
-Base URL: `http://localhost:5000`
+## Backend API (What’s implemented in code)
 
 ### Health
-- `GET /api/health` — server status + AWS connectivity check
+- `GET /api/health` — server status + AWS connectivity signal
 
 ### Users (`/api/users`)
-- `POST /signup` — create account
-- `POST /login` — login
-- `GET /username/:username` — public lookup
-- Protected:
-  - `GET /` — list users
-  - `GET /:id` — user details
-  - `PUT /:id` — update user
-  - `PUT /:id/password` — change password
+- `POST /signup`
+- `POST /login`
+- `GET /username/:username`
 
 ### Products (`/api/products`)
 - `GET /` — list products
 - `GET /search` — search products
 - `GET /global-stats` — aggregated stats
 - `GET /search/stream?q=...` — **SSE streaming search**
-- `GET /:id` — product detail
-- Protected:
-  - `POST /` — create product
-  - `PUT /:id` — update product
-  - `DELETE /:id` — delete product
-
-Content generation:
 - `POST /generate-video`
 - `POST /generate-image-ad`
 - `POST /generate-post`
 
-### GEO Analysis (`/api/geo`)
-Session workflow:
-- `POST /session` — create a GEO session
-- `GET /sessions/:product_id` — list sessions for product
-- `GET /session/:product_id/:session_id` — session details
-- `POST /session/:product_id/:session_id/questions` — add/update questions
-- `POST /session/:product_id/:session_id/answers` — add/update answers
-- `PATCH /session/:product_id/:session_id/models` — update models used
-- `PATCH /session/:product_id/:session_id/metadata` — update metadata
+### GEO Sessions (`/api/geo`)
+- Create and manage GEO analysis sessions
+- Store questions, answers, models used, and metadata per session
 
 ### Question Generation (`/api/questions`)
-- `POST /generate` — generate AI-ranking questions  
-  Body:
-  ```json
-  { "product_id": "p1", "search_query": "best accounting software for SMEs" }
-  ```
+- `POST /generate` — generate AI-ranking questions from `product_id` and `search_query`
 
-### Evaluation (`/api/evaluate`)
-- `POST /` — evaluate questions across multiple models  
-  Body:
-  ```json
-  { "questions": [ { "question_number": 1, "question": "..." } ] }
-  ```
+### Cross‑Model Evaluation (`/api/evaluate`)
+- `POST /` — evaluate question set across multiple models
 
-### Sentiment (`/api/sentiment`)
-- `GET /dev-token` — dev JWT token (for local testing)
-- `POST /analyze/:productId` — run sentiment + competitor intelligence
+### Sentiment Intelligence (`/api/sentiment`)
+- `GET /dev-token` — dev token for local testing
+- `POST /analyze/:productId` — sentiment + competitor intelligence pipeline
 
 ---
 
-## Frontend Routes (High Level)
-
-- `/` — landing
-- `/login`, `/signup`
-- `/dashboard` ��� overview + sections
-- `/dashboard/products`
-- `/dashboard/add-product`
-- `/dashboard/image-generator`
-- `/dashboard/video-generator`
-- `/dashboard/post-generator`
-- `/dashboard/settings`
+## Cost & Reuse (Engineering Notes)
+To control GenAI spend and latency, the architecture supports:
+- prompt reuse / duplicate detection
+- near-duplicate caching via normalization + hashing
+- multi-layer caching (DynamoDB for metadata/text + S3 for heavy assets)
 
 ---
 
-## How GEO Works (Conceptual)
-
-1. Questions are generated for a product + search query  
-2. Questions are evaluated across multiple LLMs  
-3. The GEO pipeline fetches **vector context** from the Vector DB and sends results to Gemini for analysis  
-4. Sessions store: competitors, models used, Q/A pairs, metadata, etc.
-
----
-
-## Notes / Troubleshooting
-
-- If `/api/products/search/stream` reports AWS credential errors, configure AWS keys in `server/.env`.
-- Vector context fetch failures are non-fatal but reduce GEO signal. Ensure your vector DB is running and `VECTOR_DB_URL` is correct.
-- Sentiment analysis requires a valid `TAVILY_API_KEY` for best results (it can fall back to low-signal mode).
-
----
-
-## License
-Add a license file if you plan to distribute this project.
+## Team
+**Tech Avinya**  
