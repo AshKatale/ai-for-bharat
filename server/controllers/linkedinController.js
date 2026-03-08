@@ -6,8 +6,8 @@ const { sendSuccess, sendError } = require('../utils/responseHandler');
 
 const LINKEDIN_CLIENT_ID = '78dywljuedqnkx';
 const LINKEDIN_CLIENT_SECRET = 'WPL_AP1.mtMHmgk9ThS40SrU.nuVqjQ==';
-const REDIRECT_URI = 'http://localhost:8080/auth/linkedin/callback';
-const FRONTEND_REDIRECT_SUCCESS = 'http://localhost:5173/dashboard/post-generator?linkedin_connected=true';
+const REDIRECT_URI = 'https://api.geonix.live/auth/linkedin/callback';
+const FRONTEND_REDIRECT_SUCCESS = 'https://www.geonix.live/dashboard/post-generator?linkedin_connected=true';
 
 // Secure cookie options
 const cookieOptionsSession = {
@@ -44,7 +44,7 @@ const authCallback = async (req, res) => {
         // Check if user denied the request
         if (error) {
             logger.error(`LinkedIn Auth Error: ${error} - ${error_description}`);
-            return res.redirect('http://localhost:5173/dashboard/post-generator?linkedin_connected=false&error=access_denied');
+            return res.redirect('https://www.geonix.live/dashboard/post-generator?linkedin_connected=false&error=access_denied');
         }
 
         // Validate state
