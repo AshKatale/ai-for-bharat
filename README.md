@@ -1,5 +1,4 @@
 [![Gemini_Generated_Image_lhsu6clhsu6clhsu.png](https://i.postimg.cc/5NqHB8nR/Gemini_Generated_Image_lhsu6clhsu6clhsu.png)](https://postimg.cc/BXbQsPWT)
-
 # AI for Bharat — AI Discoverability Optimization Platform
 A full-stack platform to help products/brands improve **visibility in AI answers** using:
 - GEO (Generative Engine Optimisation) analysis
