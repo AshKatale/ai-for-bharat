@@ -2,7 +2,7 @@
 const cors = require('cors');
 
 const corsOptions = {
-  origin: ['https://api.geonix.live','http://localhost:3000', 'http://localhost:5173', 'http://my-react-frontend-ashitosh.s3-website.ap-south-1.amazonaws.com','https://www.geonix.live'],
+  origin: ['https://api.geonix.live','http://localhost:3000', 'http://localhost:5173', 'http://my-react-frontend-ashitosh.s3-website.ap-south-1.amazonaws.com','https://www.geonix.live','https://geonix.live'],
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
