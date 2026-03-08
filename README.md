@@ -2,7 +2,6 @@
 
 # Geonix — Generative Engine Optimization (GEO) & Marketing Platform  
 **Team:** Tech Avinya  
-**Team Leader:** Prathamesh Bhaskar  
 
 > **THE FUTURE OF DISCOVERY IS AI ANSWERS, NOT SEARCH ENGINES.**  
 Businesses lack visibility and control over how their products appear in AI‑generated answers, making traditional marketing ineffective in the AI-driven discovery era.
@@ -186,4 +185,3 @@ To control GenAI spend and latency, the architecture supports:
 
 ## Team
 **Tech Avinya**  
-Team Leader: **Prathamesh Bhaskar**
