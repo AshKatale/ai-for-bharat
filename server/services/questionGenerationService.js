@@ -1,5 +1,6 @@
 // Question Generation Service
 const { DataAPIClient } = require('@datastax/astra-db-ts');
+const { pipeline } = require('@xenova/transformers');
 const { generateJSON, DEFAULT_MODEL } = require('./geminiService');
 const DynamoDBService = require('./dynamodbService');
 const logger = require('../utils/logger');
@@ -214,11 +215,6 @@ Use this exact schema:
   }
 };
 
-const warmupEmbeddingModel = async () => {
-  await getEmbeddingPipeline();
-};
-
 module.exports = {
-  generateQuestions,
-  warmupEmbeddingModel
+  generateQuestions
 };

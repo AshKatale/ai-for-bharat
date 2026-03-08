@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import logoSrc from '../assets/logo.png';
 
 function LoginPage() {
   const nav = useNavigate();
@@ -34,11 +35,9 @@ function LoginPage() {
       <div className="glass-card p-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
-            <span className="text-white text-xl font-bold">A</span>
-          </div>
+          <img src={logoSrc} alt="Logo" className="h-14 w-auto mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-white">Welcome back</h1>
-          <p className="text-sm text-slate-400 mt-1">Sign in to your AI for Bharat account</p>
+          <p className="text-sm text-slate-400 mt-1">Sign in to your account</p>
         </div>
 
         {error && (

@@ -1,6 +1,7 @@
 // Sidebar.jsx — Glass sidebar navigation
 
 import { NavLink } from 'react-router-dom';
+import logoSrc from '../assets/logo.png';
 
 const dashboardNavItems = [
   {
@@ -122,13 +123,7 @@ function Sidebar({ variant = 'dashboard', onTabChange, activeTab }) {
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-white/6 shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-            <span className="text-white text-sm font-bold">A</span>
-          </div>
-          <div>
-            <p className="text-sm font-bold text-white leading-none">AI for Bharat</p>
-            <p className="text-[10px] text-slate-500 mt-0.5">Discovery Platform</p>
-          </div>
+          <img src={logoSrc} alt="Logo" className="h-14 w-auto" />
         </div>
       </div>
 

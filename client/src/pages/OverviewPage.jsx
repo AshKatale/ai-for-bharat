@@ -102,7 +102,7 @@ function OverviewPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white">Dashboard Overview</h1>
-        <p className="text-sm text-slate-500 mt-1">Welcome back to AI for Bharat</p>
+        <p className="text-sm text-slate-500 mt-1">Welcome back</p>
       </div>
 
       {loading ? <Loader text="Loading stats..." /> : (

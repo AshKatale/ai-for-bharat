@@ -221,7 +221,7 @@ function LandingPage() {
       </section>
 
       <footer className="text-center py-8 text-xs text-slate-600 border-t border-white/5">
-        2025 AI for Bharat · Built in India
+        2025 Geonix · Built in India
       </footer>
     </div>
   );

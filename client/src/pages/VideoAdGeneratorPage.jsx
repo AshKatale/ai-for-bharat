@@ -585,7 +585,7 @@ function VideoAdGeneratorPage() {
                             >
                                 {videoConfig.branding.logoUrl ? (
                                     <img src={videoConfig.branding.logoUrl} alt="Logo"
-                                        className="h-12 mx-auto rounded object-contain" />
+                                        className="h-14 mx-auto rounded object-contain" />
                                 ) : (
                                     <>
                                         <Upload className="w-6 h-6 text-slate-600 mx-auto mb-2" />

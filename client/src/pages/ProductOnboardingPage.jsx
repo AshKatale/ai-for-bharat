@@ -106,7 +106,7 @@ function ProductOnboardingPage() {
       </div>
       <h2 className="text-2xl font-bold text-white mb-2">Product Listed!</h2>
       <p className="text-slate-400 text-sm mb-6">
-        <span className="text-white font-medium">{form.name}</span> has been added to AI for Bharat.
+        <span className="text-white font-medium">{form.name}</span> has been added successfully.
       </p>
       <button className="btn-primary" onClick={resetForm}>Add Another</button>
     </div>
