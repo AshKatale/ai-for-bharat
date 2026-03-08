@@ -12,6 +12,7 @@ const geoRoutes     = require('./routes/geoRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const evaluationRoutes = require('./routes/evaluationRoutes');
 const { initializeAWSServices, testAWSConnectivity } = require('./services/awsServices');
+const { warmupEmbeddingModel } = require('./services/questionGenerationService');
 
 
 const app = express();
@@ -78,6 +79,11 @@ const server = app.listen(PORT, async () => {
   } catch (error) {
     logger.warn(`AWS services initialization encountered an issue: ${error.message}`);
   }
+
+  // Pre-warm embedding model in background (prevents 502 on first question request)
+  warmupEmbeddingModel().catch(err =>
+    logger.warn(`Embedding model warmup failed: ${err.message}`)
+  );
 });
 
 // Handle graceful shutdown
