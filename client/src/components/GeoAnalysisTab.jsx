@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const API_BASE = `${process.env.VITE_BACKEND_URI}/api`;
+const API_BASE = `${import.meta.env.VITE_BACKEND_URI}/api`;
 
 const SIMULATION_STEPS = [
     "Compiling market visibility metrics...",

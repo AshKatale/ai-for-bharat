@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 
-const QUESTIONS_API = process.env.VITE_BACKEND_URI;
+const QUESTIONS_API = import.meta.env.VITE_BACKEND_URI;
 
 const Q_STEPS = [
     { label: 'Receiving search query', icon: '' },

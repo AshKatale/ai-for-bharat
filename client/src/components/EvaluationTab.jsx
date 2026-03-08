@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const QUESTIONS_API = process.env.VITE_BACKEND_URI;
+const QUESTIONS_API = import.meta.env.VITE_BACKEND_URI;
 
 const SIMULATION_STEPS = [
     "Initializing cross-model evaluation engine...",
